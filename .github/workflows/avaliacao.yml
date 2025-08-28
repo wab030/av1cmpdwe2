@@ -2,8 +2,8 @@ name: Avaliação Automática
 
 on:
   push:
-    branches: [ "master" ]
-
+  workflow_dispatch:
+  
 jobs:
   avaliacao:
     runs-on: ubuntu-latest
