@@ -1,0 +1,27 @@
+name: Avaliação Automática
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  avaliacao:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v3
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Instalar dependências
+        run: npm install
+
+      - name: Rodar testes (Jest)
+        run: npm test
+
+      - name: Rodar ESLint
+        run: npx eslint src/**/*.js || true
