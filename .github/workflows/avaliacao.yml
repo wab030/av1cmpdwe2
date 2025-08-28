@@ -2,7 +2,7 @@ name: Avaliação Automática
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "master" ]
 
 jobs:
   avaliacao:
