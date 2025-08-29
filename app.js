@@ -22,3 +22,5 @@ app.get('/tarsila', (req, res) => {
 app.listen(port, function() {
     console.log('Servidor rodando na porta: xxxxx', port);
 });
+
+module.exports = app;

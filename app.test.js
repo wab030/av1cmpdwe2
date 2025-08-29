@@ -1,5 +1,5 @@
 const request = require("supertest");
-const app = require("../app"); // o aluno deve exportar o app
+const app = require("./app"); // o aluno deve exportar o app
 
 describe("Testes automáticos - Produtos", () => {
   // it("Deve criar um produto", async () => {
