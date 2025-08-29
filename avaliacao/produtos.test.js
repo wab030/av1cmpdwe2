@@ -1,7 +1,7 @@
 import request from "supertest";
 import app from "../src/app.js";
 
-describe("Testes automáticos - Produtos", () => {
+describe("Produtos", () => {
   it("Deve criar um produto", async () => {
     const res = await request(app).post("/produtos").send({ nome: "Café" });
     expect(res.statusCode).toBe(201);
