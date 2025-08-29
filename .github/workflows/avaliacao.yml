@@ -2,26 +2,28 @@ name: Avaliação Automática
 
 on:
   push:
-  workflow_dispatch:
-  
+    branches: [ master ]
+  pull_request:
+
 jobs:
-  avaliacao:
+  test-and-ia:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout do código
-        uses: actions/checkout@v3
+    - uses: actions/checkout@v3
 
-      - name: Configurar Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18
 
-      - name: Instalar dependências
-        run: npm install
+    - name: Install dependencies
+      run: npm install
 
-      - name: Rodar testes (Jest)
-        run: npm test
+    - name: Run tests
+      run: npm test
 
-      - name: Rodar ESLint
-        run: npx eslint src/**/*.js || true
+    - name: Run AI evaluation
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      run: node scripts/avaliar.js

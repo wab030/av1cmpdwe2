@@ -15,7 +15,9 @@
     "supertest": "^6.3.4"
   },
   "dependencies": {
+    "dotenv": "^17.2.1",
     "ejs": "^3.1.10",
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "openai": "^5.16.0"
   }
 }
