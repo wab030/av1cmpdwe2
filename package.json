@@ -5,8 +5,12 @@
     "test": "jest --runInBand"
   },
   "devDependencies": {
+    "eslint": "^8.0.0",
     "jest": "^29.0.0",
-    "supertest": "^6.3.0",
-    "eslint": "^8.0.0"
+    "supertest": "^6.3.0"
+  },
+  "dependencies": {
+    "ejs": "^3.1.10",
+    "express": "^5.1.0"
   }
 }
