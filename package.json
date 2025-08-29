@@ -1,6 +1,7 @@
 {
   "name": "avaliacao-backend",
   "version": "1.0.0",
+  "type": "module",
   "scripts": {
     "test": "jest --runInBand"
   },
