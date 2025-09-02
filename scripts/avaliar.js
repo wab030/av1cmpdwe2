@@ -1,4 +1,4 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 async function runEvaluation() {
   const apiKey = process.env.GEMINI_API_KEY;
