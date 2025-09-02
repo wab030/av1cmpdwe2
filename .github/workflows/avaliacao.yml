@@ -36,7 +36,7 @@ jobs:
       if: always() # Garante que o relatório de testes será publicado mesmo se os testes falharem
       with:
         name: Test Results
-        path: '**/junit.xml'
+        path: '**/reports/junit.xml'
         reporter: jest-junit
 
     - name: Run AI evaluation and append to report

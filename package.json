@@ -4,7 +4,11 @@
   "type": "module",
   "scripts": {
     "start": "node src/server.js",
-    "test": "jest --runInBand"
+    "test": "jest --testResultsProcessor=jest-junit"
+  },
+  "jest-junit": {
+    "outputDirectory": "reports",
+    "outputName": "junit.xml"
   },
   "devDependencies": {
     "@babel/core": "^7.28.3",
@@ -19,6 +23,7 @@
     "dotenv": "^17.2.1",
     "ejs": "^3.1.10",
     "express": "^5.1.0",
+    "jest-junit": "^16.0.0",
     "openai": "^5.16.0"
   }
 }
