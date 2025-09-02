@@ -1,7 +1,7 @@
 Como utilizar o repositório
 
-git clone [URL-DO-SEU-REPOSITÓRIO]
-cd [nome-do-repositório]
+git clone https://github.com/wab030/av1cmpdwe2.git
+cd av1cmddwe2
 
 Crie sua própria branch
 git checkout -b nome-do-aluno/avaliacao

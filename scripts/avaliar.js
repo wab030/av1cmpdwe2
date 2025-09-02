@@ -7,8 +7,6 @@ import { configDotenv } from 'dotenv';
 // require('dotenv').config();
 configDotenv();
 
-// ... (configuração da chave API e outros imports, se necessário)
-
 async function runEvaluation() {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
@@ -17,20 +15,19 @@ async function runEvaluation() {
   }
   
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); // Use o modelo que funcionou para você
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
   try {
     const evaluationPath = path.join(process.cwd(), 'avaliacao');
     const files = await fs.readdir(evaluationPath);
     let codeToEvaluate = '';
 
-    // Loop para ler o conteúdo de cada arquivo
     for (const file of files) {
       const filePath = path.join(evaluationPath, file);
       const fileContent = await fs.readFile(filePath, 'utf-8');
       
       codeToEvaluate += `--- Conteúdo do arquivo: ${file} ---\n`;
-      codeToEvaluate += fileContent + '\n\n';
+      codeToEvaluate += '```\n' + fileContent + '\n```\n\n';
     }
 
     const prompt = `Avalie a qualidade do seguinte conjunto de arquivos de código, focando em boas práticas, consistência, segurança, legibilidade e possíveis melhorias. O código está organizado da seguinte forma:\n\n${codeToEvaluate}`;
@@ -39,9 +36,15 @@ async function runEvaluation() {
     const response = await result.response;
     const text = response.text();
     
-    console.log('--- Avaliação do Gemini ---');
-    console.log(text);
-    console.log('---------------------------');
+    // Escreve o relatório no arquivo de resumo do job para ser exibido no GitHub.
+    const summaryFilePath = process.env.GITHUB_STEP_SUMMARY;
+    if (summaryFilePath) {
+      await fs.appendFile(summaryFilePath, `### 🤖 Análise de Código (Gemini)\n\n`);
+      await fs.appendFile(summaryFilePath, text);
+      await fs.appendFile(summaryFilePath, `\n\n---`);
+    }
+
+    console.log('--- Avaliação do Gemini gerada com sucesso ---');
 
   } catch (error) {
     console.error('Erro durante a chamada da API ou leitura dos arquivos:', error);

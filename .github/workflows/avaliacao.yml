@@ -2,28 +2,44 @@ name: Avaliação Automática
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main, master ]
   pull_request:
+    branches: [ main, master ]
+
+# Permissões necessárias para que as ações possam criar relatórios e comentários.
+permissions:
+  checks: write
+  pull-requests: write
+  contents: read
 
 jobs:
   test-and-ia:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v4
 
     - name: Setup Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: 18
 
     - name: Install dependencies
       run: npm install
 
-    - name: Run tests
+    - name: Run tests and generate report
       run: npm test
+      
+    - name: Publish Test Report
+      uses: dorny/test-reporter@v1
+      if: always() # Garante que o relatório de testes será publicado mesmo se os testes falharem
+      with:
+        name: Test Results
+        path: '**/junit.xml'
+        reporter: jest-junit
 
-    - name: Run AI evaluation
+    - name: Run AI evaluation and append to report
       env:
         GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       run: node scripts/avaliar.js
