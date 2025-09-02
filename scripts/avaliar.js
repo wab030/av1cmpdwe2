@@ -1,18 +1,26 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { configDotenv } from 'dotenv';
+
+// You might need to import dotenv if you are using a .env file locally
+// require('dotenv').config();
 
 async function runEvaluation() {
+  configDotenv();
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    console.error('API key not found. Please set GEMINI_API_KEY in GitHub secrets.');
+    console.error('API key not found. Please set GEMINI_API_KEY in GitHub secrets or in a .env file.');
     process.exit(1);
   }
   
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-
+  
   try {
-    // Exemplo: Avaliar o código que foi alterado
-    const codeToEvaluate = '/* Seu código aqui. Você pode ler de um arquivo ou de um contexto fornecido pelo GitHub Actions */'; 
+    // Directly use a known working model name
+    // Try 'gemini-1.5-flash' as it's a good choice for fast text generation
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    
+    // Replace with the actual code you want to evaluate
+    const codeToEvaluate = '/* Your code here */'; 
     const prompt = `Avalie a qualidade do seguinte código, buscando por boas práticas, legibilidade e possíveis melhorias:\n\n${codeToEvaluate}`;
 
     const result = await model.generateContent(prompt);
