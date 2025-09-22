@@ -25,7 +25,7 @@ router.post("/reservar", async (req, res) => {
     // Verifica se usuário já tem reserva
     const [usuario] = await conn.query("SELECT * FROM usuarios WHERE email = ?", [email]);
     if (usuario.length === 0) return res.status(400).json({ erro: "Usuário não encontrado" });
-
+    console.log(usuario);
     const [livro] = await conn.query("SELECT * FROM livros WHERE id = ?", [livroId]);
     if (livro.length === 0) return res.status(400).json({ erro: "Livro não encontrado" });
 
@@ -36,8 +36,8 @@ router.post("/reservar", async (req, res) => {
 
     // Verifica se usuário já reservou outro livro
     const [reserva] = await conn.query(
-      "SELECT * FROM livros WHERE id IN (SELECT livroId FROM reservas WHERE email = ?) LIMIT 1",
-      [email]
+      "SELECT * FROM livros WHERE id IN (SELECT livro_id FROM emprestimos WHERE usuario_id = ?) LIMIT 1",
+      [usuario.id]
     );
 
     if (reserva.length > 0) {

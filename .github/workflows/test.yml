@@ -7,7 +7,7 @@ on:
     branches: [ "master" ]
 
 jobs:
-  test:
+  relatorio-completo:
     runs-on: ubuntu-latest
 
     services:
@@ -49,19 +49,46 @@ jobs:
             echo "Aguardando MySQL... ($i segundos restantes)"
             sleep 2
           done
+      
+      # Cria um arquivo de relatório vazio para começar
+      - name: Criar arquivo de relatório
+        run: echo "# Relatório de Análise Automatizada" > relatorio-final.md
 
-      - name: Criar usuário e esquema inicial (como root)
+      - name: Criar usuário e esquema inicial
         run: |
-          # Executa como root para criar o usuário admin
           mysql -h 127.0.0.1 -uroot -proot biblioteca < scripts/init.sql
 
-      - name: Rodar testes
-        run: npm test
+      - name: Rodar testes e adicionar ao relatório
+        run: |
+          echo "## 🧪 Resultado dos Testes Unitários" >> relatorio-final.md
+          npm test >> relatorio-final.md
         env:
           DB_HOST: 127.0.0.1
           DB_USER: admin
           DB_PASSWORD: ifsp@1234
           DB_NAME: biblioteca
 
-      - name: Rodar ESLint
-        run: npx eslint src/**/*.js
+      - name: Rodar ESLint e adicionar ao relatório
+        run: |
+          echo "## 🧹 Análise de Estilo do Código (ESLint)" >> relatorio-final.md
+          npx eslint src/**/*.js >> relatorio-final.md
+
+      - name: Análise de Código com IA (DeepSeek)
+        run: |
+          echo "## 🤖 Análise de Código com DeepSeek AI" >> relatorio-final.md
+          ./scripts/ai-code-review.sh >> relatorio-final.md
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+
+      - name: Análise de Código com IA (Gemini)
+        run: |
+          echo "## 🧠 Análise de Código com Gemini" >> relatorio-final.md
+          node scripts/ai_review.js >> relatorio-final.md
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
+      - name: Uploadar Relatório Final
+        uses: actions/upload-artifact@v3
+        with:
+          name: relatorio-completo
+          path: relatorio-final.md
