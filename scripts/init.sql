@@ -41,4 +41,6 @@ INSERT IGNORE INTO livros (titulo, autor, ano_publicacao) VALUES
 
 INSERT IGNORE INTO usuarios (nome, email) VALUES
 ('João Silva', 'joao@email.com'),
-('Maria Santos', 'maria@email.com');
+('Maria Santos', 'maria@email.com'),
+('João Teste', 'joao@example.com'),      -- ⭐ USUÁRIO DOS TESTES
+('Maria Teste', 'maria@example.com');    -- ⭐ USUÁRIO DOS TESTES
