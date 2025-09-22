@@ -14,3 +14,9 @@ git commit -m "Minha solução para a avaliação 1"
 
 # Envia a branch para o GitHub
 git push -u origin nome-do-aluno/avaliação
+
+
+
+O que eu fiz até agora. 
+Criei dois repos
+Estou tentando configura uma segunda conta para enviar o pull request
