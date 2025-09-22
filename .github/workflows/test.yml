@@ -1,0 +1,58 @@
+name: Teste da Prova de Programação
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: biblioteca
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v3
+
+      - name: Instalar Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Instalar dependências
+        run: npm install
+
+      - name: Aguardar MySQL subir
+        run: |
+          echo "Esperando MySQL..."
+          for i in {30..0}; do
+            if mysqladmin ping -h"127.0.0.1" -uroot -proot --silent; then
+              break
+            fi
+            sleep 2
+          done
+
+      - name: Criar esquema inicial
+        run: |
+          mysql -h 127.0.0.1 -uroot -proot biblioteca < scripts/init.sql
+
+      - name: Rodar testes
+        run: npm test
+
+      - name: Rodar ESLint
+        run: npx eslint src/**/*.js
+
