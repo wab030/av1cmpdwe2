@@ -2,7 +2,7 @@ const express = require('express');
 const livroRoutes = require('./routes/livroRoutes');
 
 // Usa a porta do ambiente ou 4088 por padrão (exemplo)
-const PORT = process.env.PORT || 3000;
+const PORT = 3000;
 
 const app = express();
 app.use(express.json());
