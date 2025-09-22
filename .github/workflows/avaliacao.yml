@@ -1,84 +1,106 @@
-name: Correção da Avaliação de Node.js
+name: Avaliação de Node.js - Correção Automática
 
+# O workflow é disparado a cada pull request que
+# é feito para a branch `main` do seu repositório.
 on:
-  push:
-    branches:
-      - main
   pull_request:
     branches:
       - main
+
+# Define as permissões necessárias para o token de segurança padrão
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
   correcao:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout do Repositório de Correção
+      - name: Checkout do Repositório do Aluno (via Pull Request)
         uses: actions/checkout@v3
+        with:
+          path: 'projeto-do-aluno'
+
+      - name: Checkout do Repositório de Correção para acessar os scripts e testes
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ github.repository }}
+          path: 'correcao-repo'
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Configurar Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
 
-      - name: Iniciar o MySQL e o banco de dados
+      - name: Instalar Dependências de Correção
         run: |
-          npm install mysql2
+          cd correcao-repo
+          npm install mysql2 jest axios openai
+      
+      - name: Iniciar o MySQL e configurar o banco de dados
+        run: |
+          cd correcao-repo
           node scripts/setup-db.js
-
-      - name: Checkout do Repositório do Aluno
-        # Use o repositório do aluno. A variável github.event.pull_request.head.repo.full_name
-        # funciona para pull requests. Para pushes diretos, você pode precisar de um passo manual ou de um fluxo diferente.
-        # Por exemplo, uma action que o aluno aciona no repositório dele.
-        uses: actions/checkout@v3
-        with:
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
-          path: 'aluno'
 
       - name: Instalar Dependências do Aluno
         run: |
-          cd aluno
+          cd projeto-do-aluno
           npm install
 
       - name: Iniciar o Servidor do Aluno
         run: |
-          cd aluno
-          # Este passo é crucial. O aluno deve ter um script para rodar a aplicação.
-          # A porta pode ser um problema. A solução é passar a porta como variável de ambiente.
-          # Exemplo: PORT=40XX npm start &
-          # O '&' é para rodar em background.
-          # Você precisará descobrir os dois últimos dígitos do CPF do aluno para calcular a porta.
-          # Isso pode ser feito via input do workflow, ou uma convenção de nomenclatura.
+          cd projeto-do-aluno
+          # A porta precisa ser configurada no projeto do aluno.
+          # Sugira que o aluno use uma variável de ambiente, ou passe como parâmetro.
+          PORT=4088 npm start &
         env:
-          PORTA: '4088' # Exemplo: 40 + 88 (dois últimos do CPF)
-        
+          PORT: '4088'
+
       - name: Aguardar o servidor iniciar
-        run: sleep 10
+        run: sleep 15
 
       - name: Executar os Testes de Validação
+        id: run_tests
         run: |
-          npm install jest axios
-          npx jest tests/
+          cd correcao-repo
+          npx jest tests/ > test_results.txt 2>&1 || true
 
-      - name: Avaliar Boas Práticas (Com IA)
+      - name: Analisar Boas Práticas com IA
         id: ia-review
         run: |
-          # Use uma API de IA como o GPT-4 para analisar o código.
-          # Este passo pode ser complexo, pois envolve integração com a API da OpenAI ou similar.
-          # Crie um script 'review-code.js' que lê os arquivos do aluno e envia para a IA.
-          # Exemplo:
-          # node scripts/review-code.js > ia_report.txt
-          # e depois use 'cat ia_report.txt' para exibir o resultado.
-          echo "Simulando análise de código por IA..."
-          echo "A IA analisou o código e encontrou..." > ia_report.txt
-          echo "  - O código está bem organizado, usando controladores e rotas." >> ia_report.txt
-          echo "  - A conexão com o banco de dados não está em um arquivo de configuração." >> ia_report.txt
-          echo "  - As variáveis de ambiente não foram usadas para credenciais." >> ia_report.txt
-          
-      - name: Exibir Relatório da IA
-        run: cat ia_report.txt
+          cd correcao-repo
+          # O script 'review-code.js' lê o código do aluno na pasta 'projeto-do-aluno'
+          node scripts/review-code.js > ia_report.txt
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+      - name: Gerar Relatório de Feedback
+        id: feedback-report
+        run: |
+          cd correcao-repo
+          echo "## Relatório de Correção Automatizada" > feedback.md
+          echo "### 1. Testes Funcionais" >> feedback.md
+          cat test_results.txt >> feedback.md
+          echo "### 2. Análise de Boas Práticas (por IA)" >> feedback.md
+          cat ia_report.txt >> feedback.md
+
+      - name: Comentar no Pull Request com o Feedback
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const feedback = fs.readFileSync('correcao-repo/feedback.md', 'utf8');
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: feedback
+            });
 
       - name: Limpar o ambiente Docker
         if: always()
         run: |
+          cd correcao-repo
           node scripts/clean-up.js
