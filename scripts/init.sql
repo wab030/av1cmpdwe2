@@ -13,7 +13,8 @@ CREATE TABLE IF NOT EXISTS livros (
     titulo VARCHAR(255) NOT NULL,
     autor VARCHAR(255) NOT NULL,
     ano_publicacao INT,
-    disponivel BOOLEAN DEFAULT TRUE
+    disponivel BOOLEAN DEFAULT TRUE,
+    exemplares INT DEFAULT 1  -- ⭐ COLUNA QUE FALTAVA!
 );
 
 CREATE TABLE IF NOT EXISTS usuarios (

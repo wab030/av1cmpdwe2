@@ -7,8 +7,8 @@ let connection;
 beforeAll(async () => {
   connection = await mysql.createConnection({
     host: "localhost",
-    user: "root",
-    password: "root",
+    user: "admin",
+    password: "ifsp@1234",
     database: "biblioteca"
   });
 });
