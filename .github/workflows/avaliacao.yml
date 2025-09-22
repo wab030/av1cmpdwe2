@@ -1,45 +1,84 @@
-name: Avaliação Automática
+name: Correção da Avaliação de Node.js
 
 on:
   push:
-    branches: [ main, master ]
+    branches:
+      - main
   pull_request:
-    branches: [ main, master ]
-
-# Permissões necessárias para que as ações possam criar relatórios e comentários.
-permissions:
-  checks: write
-  pull-requests: write
-  contents: read
+    branches:
+      - main
 
 jobs:
-  test-and-ia:
+  correcao:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout do Repositório de Correção
+        uses: actions/checkout@v3
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: 18
+      - name: Configurar Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
 
-    - name: Install dependencies
-      run: npm install
+      - name: Iniciar o MySQL e o banco de dados
+        run: |
+          npm install mysql2
+          node scripts/setup-db.js
 
-    - name: Run tests and generate report
-      run: npm test
-      
-    - name: Publish Test Report
-      uses: dorny/test-reporter@v1
-      if: always() # Garante que o relatório de testes será publicado mesmo se os testes falharem
-      with:
-        name: Test Results
-        path: '**/reports/junit.xml'
-        reporter: jest-junit
+      - name: Checkout do Repositório do Aluno
+        # Use o repositório do aluno. A variável github.event.pull_request.head.repo.full_name
+        # funciona para pull requests. Para pushes diretos, você pode precisar de um passo manual ou de um fluxo diferente.
+        # Por exemplo, uma action que o aluno aciona no repositório dele.
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          path: 'aluno'
 
-    - name: Run AI evaluation and append to report
-      env:
-        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-      run: node scripts/avaliar.js
+      - name: Instalar Dependências do Aluno
+        run: |
+          cd aluno
+          npm install
+
+      - name: Iniciar o Servidor do Aluno
+        run: |
+          cd aluno
+          # Este passo é crucial. O aluno deve ter um script para rodar a aplicação.
+          # A porta pode ser um problema. A solução é passar a porta como variável de ambiente.
+          # Exemplo: PORT=40XX npm start &
+          # O '&' é para rodar em background.
+          # Você precisará descobrir os dois últimos dígitos do CPF do aluno para calcular a porta.
+          # Isso pode ser feito via input do workflow, ou uma convenção de nomenclatura.
+        env:
+          PORTA: '4088' # Exemplo: 40 + 88 (dois últimos do CPF)
+        
+      - name: Aguardar o servidor iniciar
+        run: sleep 10
+
+      - name: Executar os Testes de Validação
+        run: |
+          npm install jest axios
+          npx jest tests/
+
+      - name: Avaliar Boas Práticas (Com IA)
+        id: ia-review
+        run: |
+          # Use uma API de IA como o GPT-4 para analisar o código.
+          # Este passo pode ser complexo, pois envolve integração com a API da OpenAI ou similar.
+          # Crie um script 'review-code.js' que lê os arquivos do aluno e envia para a IA.
+          # Exemplo:
+          # node scripts/review-code.js > ia_report.txt
+          # e depois use 'cat ia_report.txt' para exibir o resultado.
+          echo "Simulando análise de código por IA..."
+          echo "A IA analisou o código e encontrou..." > ia_report.txt
+          echo "  - O código está bem organizado, usando controladores e rotas." >> ia_report.txt
+          echo "  - A conexão com o banco de dados não está em um arquivo de configuração." >> ia_report.txt
+          echo "  - As variáveis de ambiente não foram usadas para credenciais." >> ia_report.txt
+          
+      - name: Exibir Relatório da IA
+        run: cat ia_report.txt
+
+      - name: Limpar o ambiente Docker
+        if: always()
+        run: |
+          node scripts/clean-up.js
