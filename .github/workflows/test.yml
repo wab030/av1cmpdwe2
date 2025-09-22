@@ -42,9 +42,12 @@ jobs:
         run: |
           echo "Esperando MySQL..."
           for i in {30..0}; do
-            if mysqladmin ping -h"127.0.0.1" -uroot -proot --silent; then
+            # ✅ CORRIGIDO: Agora usa admin consistentemente
+            if mysqladmin ping -h"127.0.0.1" -uadmin -pifsp@1234 --silent; then
+              echo "MySQL está rodando!"
               break
             fi
+            echo "Aguardando MySQL... ($i segundos restantes)"
             sleep 2
           done
 
@@ -55,11 +58,11 @@ jobs:
       - name: Rodar testes
         run: npm test
         env:
-        DB_HOST: 127.0.0.1
-        DB_USER: admin
-        DB_PASSWORD: ifsp@1234
-        DB_NAME: biblioteca
+          # ✅ CORRIGIDO: Indentação correta (2 espaços)
+          DB_HOST: 127.0.0.1
+          DB_USER: admin
+          DB_PASSWORD: ifsp@1234
+          DB_NAME: biblioteca
 
       - name: Rodar ESLint
         run: npx eslint src/**/*.js
-
