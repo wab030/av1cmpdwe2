@@ -11,5 +11,5 @@ app.use(express.json());
 app.use('/api', livroRoutes);
 
 app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
+  console.log(`Servidor rodando na portaaaaa ${PORT}`);
 });
