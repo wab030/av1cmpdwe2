@@ -42,8 +42,7 @@ jobs:
         run: |
           echo "Esperando MySQL..."
           for i in {30..0}; do
-            # ✅ CORRIGIDO: Agora usa admin consistentemente
-            if mysqladmin ping -h"127.0.0.1" -uadmin -pifsp@1234 --silent; then
+            if mysqladmin ping -h"127.0.0.1" -uroot -proot --silent; then
               echo "MySQL está rodando!"
               break
             fi
@@ -51,14 +50,14 @@ jobs:
             sleep 2
           done
 
-      - name: Criar esquema inicial
+      - name: Criar usuário e esquema inicial (como root)
         run: |
-          mysql -h 127.0.0.1 -uadmin -pifsp@1234 biblioteca < scripts/init.sql
+          # Executa como root para criar o usuário admin
+          mysql -h 127.0.0.1 -uroot -proot biblioteca < scripts/init.sql
 
       - name: Rodar testes
         run: npm test
         env:
-          # ✅ CORRIGIDO: Indentação correta (2 espaços)
           DB_HOST: 127.0.0.1
           DB_USER: admin
           DB_PASSWORD: ifsp@1234
