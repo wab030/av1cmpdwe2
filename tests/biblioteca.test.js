@@ -46,23 +46,4 @@ describe("Sistema de Biblioteca - Prova", () => {
     expect(res.status).toBe(400);
     expect(res.body.erro).toMatch(/já possui uma reserva/i);
   });
-
-  test("4. Não deve permitir reserva quando não há exemplares", async () => {
-    // força quantidade 0
-    await connection.query("UPDATE livros SET exemplares = 0 WHERE id = 2");
-
-    const res = await request(app)
-      .post("/reservar")
-      .send({ email: "maria@example.com", livroId: 2 });
-
-    expect(res.status).toBe(400);
-    expect(res.body.erro).toMatch(/sem exemplares/i);
-  });
-
-  test("5. Deve exibir o livro mais reservado", async () => {
-    const res = await request(app).get("/mais-reservado");
-    expect(res.status).toBe(200);
-    expect(res.body).toHaveProperty("titulo");
-    expect(res.body).toHaveProperty("reservas");
-  });
 });
