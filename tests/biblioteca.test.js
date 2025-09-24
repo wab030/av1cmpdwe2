@@ -1,6 +1,6 @@
 const request = require("supertest");
 const mysql = require("mysql2/promise");
-const app = require("../src/app"); // importa só o app, sem .listen()
+const app = require("../src/app");
 
 let connection;
 
@@ -9,26 +9,28 @@ beforeAll(async () => {
     host: "localhost",
     user: "admin",
     password: "ifsp@1234",
-    database: "biblioteca"
+    database: "biblioteca",
   });
+});
 
-  // Limpa tabelas
+beforeEach(async () => {
+  // Limpa tabelas antes de cada teste
   await connection.query("DELETE FROM emprestimos");
-  await connection.query("DELETE FROM usuarios WHERE email LIKE '%@example.com'");
+  await connection.query("DELETE FROM usuarios WHERE email LIKE '%@example.com' OR email = 'joao@email.com'");
   await connection.query("DELETE FROM livros");
 
-  // Insere usuários de teste
+  // Insere usuários de teste (sem id)
   await connection.query(
-    "INSERT INTO usuarios (id, nome, email) VALUES (?, ?, ?), (?, ?, ?)",
-    [1, "João da Silva", "joao@email.com",
-     2, "Maria Teste", "maria@example.com"]
+    "INSERT INTO usuarios (nome, email) VALUES (?, ?), (?, ?)",
+    ["João da Silva", "joao@email.com",
+     "Maria Teste", "maria@example.com"]
   );
 
-  // Insere livros de teste
+  // Insere livros de teste (sem id)
   await connection.query(
-    "INSERT INTO livros (id, titulo, autor, exemplares) VALUES (?, ?, ?, ?), (?, ?, ?, ?)",
-    [1, "Dom Casmurro", "Machado de Assis", 3,
-     2, "Memórias Póstumas", "Machado de Assis", 2]
+    "INSERT INTO livros (titulo, autor, exemplares) VALUES (?, ?, ?), (?, ?, ?)",
+    ["Dom Casmurro", "Machado de Assis", 3,
+     "Memórias Póstumas", "Machado de Assis", 2]
   );
 });
 
@@ -37,7 +39,6 @@ afterAll(async () => {
 });
 
 // ----------------- TESTES -----------------
-
 describe("📚 Sistema de Biblioteca", () => {
   test("1. Deve listar todos os livros disponíveis com título, autor e exemplares", async () => {
     const res = await request(app).get("/livros");
@@ -58,6 +59,12 @@ describe("📚 Sistema de Biblioteca", () => {
   });
 
   test("3. Usuário não deve reservar outro livro sem devolver o primeiro", async () => {
+    // Primeiro reserva
+    await request(app)
+      .post("/reservar")
+      .send({ email: "joao@email.com", livroId: 1 });
+
+    // Tenta reservar outro
     const res = await request(app)
       .post("/reservar")
       .send({ email: "joao@email.com", livroId: 2 });
