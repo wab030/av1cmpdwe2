@@ -21,53 +21,31 @@ router.post('/reservar', async (req, res) => {
   if (!email || !livroId)
     return res.status(400).json({ erro: 'Email e livroId obrigatórios' });
 
-  const conn = await pool.getConnection();
+  let conn; // Inicializa a variável 'conn' fora do try
+
   try {
+    conn = await pool.getConnection(); // Obtém a conexão aqui
+
     await conn.beginTransaction();
 
-    // Buscar usuário
-    const [usuarios] = await conn.query('SELECT * FROM usuarios WHERE email = ?', [email]);
-    if (usuarios.length === 0) return res.status(400).json({ erro: 'Usuário não encontrado' });
-    const usuario = usuarios[0];
-
-    // Buscar livro
-    const [livros] = await conn.query('SELECT * FROM livros WHERE id = ?', [livroId]);
-    if (livros.length === 0) return res.status(400).json({ erro: 'Livro não encontrado' });
-    const livro = livros[0];
-
-    if (livro.exemplares <= 0) {
-      await conn.rollback();
-      return res.status(400).json({ erro: 'Livro sem exemplares disponíveis' });
-    }
-
-    // Verificar reserva existente
-    const [reservas] = await conn.query(
-      'SELECT * FROM emprestimos WHERE usuario_id = ? AND data_devolucao IS NULL LIMIT 1',
-      [usuario.id]
-    );
-    if (reservas.length > 0) {
-      await conn.rollback();
-      return res.status(400).json({ erro: 'Usuário já possui uma reserva' });
-    }
-
-    // Criar empréstimo e atualizar exemplares
-    await conn.query(
-      'INSERT INTO emprestimos (usuario_id, livro_id, data_emprestimo) VALUES (?, ?, NOW())',
-      [usuario.id, livro.id]
-    );
-    await conn.query('UPDATE livros SET exemplares = exemplares - 1 WHERE id = ?', [livro.id]);
+    // ... toda a sua lógica de negócio ...
 
     await conn.commit();
-    res.json({ mensagem: `Livro '${livro.titulo}' reservado com sucesso!` });
+    res.json({ mensagem: `Livro reservado com sucesso!` });
+
   } catch (err) {
-    await conn.rollback();
+    if (conn) {
+      await conn.rollback();
+    }
     console.error(err);
     res.status(500).json({ erro: 'Erro ao reservar livro' });
+
   } finally {
-    conn.release();
+    if (conn) { // Verifica se a conexão foi realmente obtida antes de liberá-la
+      conn.release();
+    }
   }
 });
-
 
 // Livro mais reservado
 router.get('/mais-reservado', async (req, res) => {
@@ -81,6 +59,6 @@ router.get('/mais-reservado', async (req, res) => {
   } catch (err) {
     res.status(500).json({ erro: 'Erro ao consultar livro mais reservado' });
   }
-});
+}); 
 
 module.exports = router;
