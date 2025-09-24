@@ -40,7 +40,7 @@ beforeEach(async () => {
       'Machado de Assis',
       2,
     ]
-  );
+  ); 
 
   // Captura os IDs gerados dinamicamente
   const [livros] = await connection.query(
