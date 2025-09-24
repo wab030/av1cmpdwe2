@@ -1,37 +1,50 @@
-const request = require("supertest");
-const mysql = require("mysql2/promise");
-const app = require("../src/app");
+const request = require('supertest');
+const mysql = require('mysql2/promise');
+const app = require('../src/app');
 
 let connection;
 
 beforeAll(async () => {
   connection = await mysql.createConnection({
-    host: "localhost",
-    user: "admin",
-    password: "ifsp@1234",
-    database: "biblioteca",
+    host: 'localhost',
+    user: 'admin',
+    password: 'ifsp@1234',
+    database: 'biblioteca',
   });
 });
 
 beforeEach(async () => {
   // Limpa tabelas antes de cada teste
-  await connection.query("DELETE FROM emprestimos");
-  await connection.query("DELETE FROM usuarios WHERE email LIKE '%@example.com' OR email = 'joao@email.com'");
-  await connection.query("DELETE FROM livros");
+  await connection.query('DELETE FROM emprestimos');
+  await connection.query(
+    "DELETE FROM usuarios WHERE email LIKE '%@example.com' OR email = 'joao@email.com'"
+  );
+  await connection.query('DELETE FROM livros');
 
   // Insere usuários de teste (sem id)
   await connection.query(
-    "INSERT INTO usuarios (nome, email) VALUES (?, ?), (?, ?)",
-    ["João da Silva", "joao@email.com",
-     "Maria Teste", "maria@example.com"]
+    'INSERT INTO usuarios (nome, email) VALUES (?, ?), (?, ?)',
+    ['João da Silva', 'joao@email.com', 'Maria Teste', 'maria@example.com']
   );
 
   // Insere livros de teste (sem id)
   await connection.query(
-    "INSERT INTO livros (titulo, autor, exemplares) VALUES (?, ?, ?), (?, ?, ?)",
-    ["Dom Casmurro", "Machado de Assis", 3,
-     "Memórias Póstumas", "Machado de Assis", 2]
+    'INSERT INTO livros (titulo, autor, exemplares) VALUES (?, ?, ?), (?, ?, ?)',
+    [
+      'Dom Casmurro',
+      'Machado de Assis',
+      3,
+      'Memórias Póstumas',
+      'Machado de Assis',
+      2,
+    ]
   );
+  // Busca os IDs gerados
+  const [livros] = await connection.query(
+    'SELECT id, titulo FROM livros ORDER BY id ASC'
+  );
+  const livro1Id = livros[0].id; // Dom Casmurro
+  const livro2Id = livros[1].id; // Memórias Póstumas
 });
 
 afterAll(async () => {
@@ -39,35 +52,35 @@ afterAll(async () => {
 });
 
 // ----------------- TESTES -----------------
-describe("📚 Sistema de Biblioteca", () => {
-  test("1. Deve listar todos os livros disponíveis com título, autor e exemplares", async () => {
-    const res = await request(app).get("/livros");
+describe('📚 Sistema de Biblioteca', () => {
+  test('1. Deve listar todos os livros disponíveis com título, autor e exemplares', async () => {
+    const res = await request(app).get('/livros');
     expect(res.status).toBe(200);
     expect(Array.isArray(res.body)).toBe(true);
-    expect(res.body[0]).toHaveProperty("titulo");
-    expect(res.body[0]).toHaveProperty("autor");
-    expect(res.body[0]).toHaveProperty("exemplares");
+    expect(res.body[0]).toHaveProperty('titulo');
+    expect(res.body[0]).toHaveProperty('autor');
+    expect(res.body[0]).toHaveProperty('exemplares');
   });
 
-  test("2. Usuário deve conseguir reservar um livro válido", async () => {
+  test('2. Usuário deve conseguir reservar um livro válido', async () => {
     const res = await request(app)
-      .post("/reservar")
-      .send({ email: "joao@email.com", livroId: 1 });
+      .post('/reservar')
+      .send({ email: 'joao@email.com', livroId: livro1Id });
 
     expect(res.status).toBe(200);
     expect(res.body.mensagem).toMatch(/reservado/i);
   });
 
-  test("3. Usuário não deve reservar outro livro sem devolver o primeiro", async () => {
+  test('3. Usuário não deve reservar outro livro sem devolver o primeiro', async () => {
     // Primeiro reserva
     await request(app)
-      .post("/reservar")
-      .send({ email: "joao@email.com", livroId: 1 });
+      .post('/reservar')
+      .send({ email: 'joao@email.com', livroId: livro2Id });
 
     // Tenta reservar outro
     const res = await request(app)
-      .post("/reservar")
-      .send({ email: "joao@email.com", livroId: 2 });
+      .post('/reservar')
+      .send({ email: 'joao@email.com', livroId: 2 });
 
     expect(res.status).toBe(400);
     expect(res.body.erro).toMatch(/já possui uma reserva/i);
