@@ -51,7 +51,9 @@ beforeEach(async () => {
 
 afterAll(async () => {
   if (connection) await connection.end();
+  await pool.end(); // se estiver usando pool
 });
+
 
 // ----------------- TESTES -----------------
 describe('📚 Sistema de Biblioteca', () => {
