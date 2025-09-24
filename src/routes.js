@@ -25,46 +25,40 @@ router.post('/reservar', async (req, res) => {
   try {
     await conn.beginTransaction();
 
-    // Verifica se usuário já tem reserva
-    const [usuario] = await conn.query(
-      'SELECT * FROM usuarios WHERE email = ?',
-      [email]
-    );
-    if (usuario.length === 0)
-      return res.status(400).json({ erro: 'Usuário não encontrado' });
-    console.log(usuario);
-    const [livro] = await conn.query('SELECT * FROM livros WHERE id = ?', [
-      livroId,
-    ]);
-    if (livro.length === 0)
-      return res.status(400).json({ erro: 'Livro não encontrado' });
+    // Buscar usuário
+    const [usuarios] = await conn.query('SELECT * FROM usuarios WHERE email = ?', [email]);
+    if (usuarios.length === 0) return res.status(400).json({ erro: 'Usuário não encontrado' });
+    const usuario = usuarios[0];
 
-    if (livro[0].exemplares <= 0) {
+    // Buscar livro
+    const [livros] = await conn.query('SELECT * FROM livros WHERE id = ?', [livroId]);
+    if (livros.length === 0) return res.status(400).json({ erro: 'Livro não encontrado' });
+    const livro = livros[0];
+
+    if (livro.exemplares <= 0) {
       await conn.rollback();
       return res.status(400).json({ erro: 'Livro sem exemplares disponíveis' });
     }
 
-    // Verifica se usuário já reservou outro livro
-    const usuarioId = usuario[0].id;
-
-    const [reserva] = await conn.query(
-      'SELECT * FROM livros WHERE id IN (SELECT livro_id FROM emprestimos WHERE usuario_id = ?) LIMIT 1',
-      [usuarioId]
+    // Verificar reserva existente
+    const [reservas] = await conn.query(
+      'SELECT * FROM emprestimos WHERE usuario_id = ? AND data_devolucao IS NULL LIMIT 1',
+      [usuario.id]
     );
-
-    if (reserva.length > 0) {
+    if (reservas.length > 0) {
       await conn.rollback();
       return res.status(400).json({ erro: 'Usuário já possui uma reserva' });
     }
 
-    // Reduz exemplares e incrementa reservas
+    // Criar empréstimo e atualizar exemplares
     await conn.query(
-      'UPDATE livros SET exemplares = exemplares - 1, reservas = reservas + 1 WHERE id = ?',
-      [livroId]
+      'INSERT INTO emprestimos (usuario_id, livro_id, data_emprestimo) VALUES (?, ?, NOW())',
+      [usuario.id, livro.id]
     );
+    await conn.query('UPDATE livros SET exemplares = exemplares - 1 WHERE id = ?', [livro.id]);
 
     await conn.commit();
-    res.json({ mensagem: `Livro '${livro[0].titulo}' reservado com sucesso!` });
+    res.json({ mensagem: `Livro '${livro.titulo}' reservado com sucesso!` });
   } catch (err) {
     await conn.rollback();
     console.error(err);
@@ -73,6 +67,7 @@ router.post('/reservar', async (req, res) => {
     conn.release();
   }
 });
+
 
 // Livro mais reservado
 router.get('/mais-reservado', async (req, res) => {
