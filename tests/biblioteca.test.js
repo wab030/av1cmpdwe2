@@ -1,6 +1,6 @@
 const request = require("supertest");
 const mysql = require("mysql2/promise");
-const app = require("../src/app");
+const app = require("../src/app"); // importa só o app, sem .listen()
 
 let connection;
 
@@ -9,30 +9,26 @@ beforeAll(async () => {
     host: "localhost",
     user: "admin",
     password: "ifsp@1234",
-    database: "biblioteca",
+    database: "biblioteca"
   });
-});
 
-beforeEach(async () => {
-  // Limpa tabelas antes de cada teste
+  // Limpa tabelas
   await connection.query("DELETE FROM emprestimos");
-  await connection.query("DELETE FROM usuarios");
+  await connection.query("DELETE FROM usuarios WHERE email LIKE '%@example.com'");
   await connection.query("DELETE FROM livros");
 
-  // Insere dados consistentes de teste
+  // Insere usuários de teste
   await connection.query(
-    "INSERT INTO usuarios (id, nome, email) VALUES (?, ?, ?)",
-    [1, "João da Silva", "joao@email.com"]
+    "INSERT INTO usuarios (id, nome, email) VALUES (?, ?, ?), (?, ?, ?)",
+    [1, "João da Silva", "joao@email.com",
+     2, "Maria Teste", "maria@example.com"]
   );
 
+  // Insere livros de teste
   await connection.query(
-    "INSERT INTO livros (id, titulo, autor, exemplares, reservas) VALUES (?, ?, ?, ?, ?)",
-    [1, "Dom Casmurro", "Machado de Assis", 3, 0]
-  );
-
-  await connection.query(
-    "INSERT INTO livros (id, titulo, autor, exemplares, reservas) VALUES (?, ?, ?, ?, ?)",
-    [2, "Memórias Póstumas", "Machado de Assis", 2, 0]
+    "INSERT INTO livros (id, titulo, autor, exemplares) VALUES (?, ?, ?, ?), (?, ?, ?, ?)",
+    [1, "Dom Casmurro", "Machado de Assis", 3,
+     2, "Memórias Póstumas", "Machado de Assis", 2]
   );
 });
 
@@ -41,17 +37,15 @@ afterAll(async () => {
 });
 
 // ----------------- TESTES -----------------
+
 describe("📚 Sistema de Biblioteca", () => {
   test("1. Deve listar todos os livros disponíveis com título, autor e exemplares", async () => {
     const res = await request(app).get("/livros");
-
     expect(res.status).toBe(200);
     expect(Array.isArray(res.body)).toBe(true);
-
-    const livro = res.body[0];
-    expect(livro).toHaveProperty("titulo");
-    expect(livro).toHaveProperty("autor");
-    expect(livro).toHaveProperty("exemplares");
+    expect(res.body[0]).toHaveProperty("titulo");
+    expect(res.body[0]).toHaveProperty("autor");
+    expect(res.body[0]).toHaveProperty("exemplares");
   });
 
   test("2. Usuário deve conseguir reservar um livro válido", async () => {
@@ -64,12 +58,6 @@ describe("📚 Sistema de Biblioteca", () => {
   });
 
   test("3. Usuário não deve reservar outro livro sem devolver o primeiro", async () => {
-    // Primeiro reserva
-    await request(app)
-      .post("/reservar")
-      .send({ email: "joao@email.com", livroId: 1 });
-
-    // Tenta reservar outro
     const res = await request(app)
       .post("/reservar")
       .send({ email: "joao@email.com", livroId: 2 });
