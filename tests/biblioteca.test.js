@@ -3,6 +3,8 @@ const mysql = require('mysql2/promise');
 const app = require('../src/app');
 
 let connection;
+let livro1Id;
+let livro2Id;
 
 beforeAll(async () => {
   connection = await mysql.createConnection({
@@ -21,13 +23,13 @@ beforeEach(async () => {
   );
   await connection.query('DELETE FROM livros');
 
-  // Insere usuários de teste (sem id)
+  // Insere usuários de teste
   await connection.query(
     'INSERT INTO usuarios (nome, email) VALUES (?, ?), (?, ?)',
     ['João da Silva', 'joao@email.com', 'Maria Teste', 'maria@example.com']
   );
 
-  // Insere livros de teste (sem id)
+  // Insere livros de teste
   await connection.query(
     'INSERT INTO livros (titulo, autor, exemplares) VALUES (?, ?, ?), (?, ?, ?)',
     [
@@ -39,12 +41,12 @@ beforeEach(async () => {
       2,
     ]
   );
+
   // Busca os IDs gerados
   const [livros] = await connection.query(
     'SELECT id, titulo FROM livros ORDER BY id ASC'
   );
-  const livro1Id = livros[0].id; // Dom Casmurro
-  const livro2Id = livros[1].id; // Memórias Póstumas
+  [livro1Id, livro2Id] = livros.map(l => l.id);
 });
 
 afterAll(async () => {
@@ -75,14 +77,12 @@ describe('📚 Sistema de Biblioteca', () => {
     // Primeiro reserva
     await request(app)
       .post('/reservar')
-      .send({ email: 'joao@email.com', livroId: livro2Id });
+      .send({ email: 'joao@email.com', livroId: livro1Id });
 
     // Tenta reservar outro
     const res = await request(app)
       .post('/reservar')
-      .send({ email: 'joao@email.com', livroId: 2 });
+      .send({ email: 'joao@email.com', livroId: livro2Id });
 
     expect(res.status).toBe(400);
-    expect(res.body.erro).toMatch(/já possui uma reserva/i);
-  });
-});
+    expect(res.body.erro).toMatch(/já possui
