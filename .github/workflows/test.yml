@@ -80,7 +80,7 @@ jobs:
       - name: Análise de Código com IA (DeepSeek)
         run: |
           echo "## 🤖 Análise de Código com DeepSeek AI" >> relatorio-final.md
-          ./scripts/ai-code-review.sh >> relatorio-final.md
+          ./scripts/ai_review.sh >> relatorio-final.md
         env:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
 
