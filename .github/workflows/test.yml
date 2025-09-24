@@ -77,13 +77,6 @@ jobs:
           echo "## 🧹 Análise de Estilo do Código (ESLint)" >> relatorio-final.md
           npx eslint src/**/*.js >> relatorio-final.md
 
-      - name: Análise de Código com IA (DeepSeek)
-        run: |
-          echo "## 🤖 Análise de Código com DeepSeek AI" >> relatorio-final.md
-          ./scripts/ai_review.sh >> relatorio-final.md
-        env:
-          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
-
       - name: Análise de Código com IA (Gemini)
         run: |
           echo "## 🧠 Análise de Código com Gemini" >> relatorio-final.md
