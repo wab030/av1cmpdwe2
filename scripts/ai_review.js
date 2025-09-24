@@ -1,4 +1,7 @@
 // scripts/ai_review.js
+require('dotenv').config(); // <-- ADICIONE ESTA LINHA NO TOPO
+
+console.log(process.env.GEMINI_API_KEY);
 
 const fs = require("fs");
 const path = require("path");

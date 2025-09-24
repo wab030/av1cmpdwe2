@@ -65,7 +65,7 @@ jobs:
       - name: Rodar testes e adicionar ao relatório
         run: |
           echo "## 🧪 Resultado dos Testes Unitários" >> relatorio-final.md
-          npm test >> relatorio-final.md
+          npm test -- --colors=false 2>&1 | tee -a >> relatorio-final.md
         env:
           DB_HOST: 127.0.0.1
           DB_USER: admin
@@ -83,6 +83,11 @@ jobs:
           node scripts/ai_review.js >> relatorio-final.md
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
+      - name: Consolidar relatório da IA
+        run: |
+          # Adiciona o conteúdo do relatório da IA no relatório final
+          cat reports/ai-code-review.md >> relatorio-final.md
 
       - name: Uploadar Relatório Final
         uses: actions/upload-artifact@v4
