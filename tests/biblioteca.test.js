@@ -85,4 +85,6 @@ describe('📚 Sistema de Biblioteca', () => {
       .send({ email: 'joao@email.com', livroId: livro2Id });
 
     expect(res.status).toBe(400);
-    expect(res.body.erro).toMatch(/já possui
+    expect(res.body.erro).toMatch(/já possui uma reserva/i);
+  });
+});
