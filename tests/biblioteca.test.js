@@ -1,6 +1,7 @@
 const request = require('supertest');
 const mysql = require('mysql2/promise');
 const app = require('../src/app');
+const pool = require('../src/db'); // se você usa pool no app
 
 let connection;
 let livroIds = [];
@@ -13,11 +14,13 @@ beforeAll(async () => {
     database: 'biblioteca',
   });
 });
-  
-beforeEach(async (   ) => {
+
+beforeEach(async () => {
   // Limpa tabelas
   await connection.query('DELETE FROM emprestimos');
-  await connection.query("DELETE FROM usuarios WHERE email LIKE '%@example.com' OR email = 'joao@email.com'");
+  await connection.query(
+    "DELETE FROM usuarios WHERE email LIKE '%@example.com' OR email = 'joao@email.com'"
+  );
   await connection.query('DELETE FROM livros');
 
   // Insere usuários de teste
@@ -29,16 +32,26 @@ beforeEach(async (   ) => {
   // Insere livros de teste
   await connection.query(
     'INSERT INTO livros (titulo, autor, exemplares) VALUES (?, ?, ?), (?, ?, ?)',
-    ['Dom Casmurro', 'Machado de Assis', 3, 'Memórias Póstumas', 'Machado de Assis', 2]
+    [
+      'Dom Casmurro',
+      'Machado de Assis',
+      3,
+      'Memórias Póstumas',
+      'Machado de Assis',
+      2,
+    ]
   );
 
   // Captura os IDs gerados dinamicamente
-  const [livros] = await connection.query('SELECT id, titulo FROM livros ORDER BY id ASC');
-  livroIds = livros.map(l => l.id);
+  const [livros] = await connection.query(
+    'SELECT id, titulo FROM livros ORDER BY id ASC'
+  );
+  livroIds = livros.map((l) => l.id);
 });
 
 afterAll(async () => {
   if (connection) await connection.end(); // fecha a conexão
+  if (pool) await pool.end(); // fecha o pool
 });
 
 describe('📚 Sistema de Biblioteca', () => {

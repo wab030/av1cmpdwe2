@@ -1,13 +1,7 @@
-const express = require("express");
+const express = require('express');
 const app = express();
-const routes = require("./routes");
 
 app.use(express.json());
-app.use(routes);
+app.use(require('./routes')); // suas rotas
 
-const PORT = 4040; // Ajuste conforme o enunciado (porta = 40 + dois últimos dígitos do CPF)
-app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
-});
-
-module.exports = app; // Exporta para os testes
+module.exports = app; // exporta só o app
