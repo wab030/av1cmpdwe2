@@ -60,7 +60,8 @@ jobs:
 
       - name: Diagnosticar conexão com o usuário admin
         run: |
-          mysql -h 127.0.0.1 -uadmin -pifsp@1234 -e "SHOW DATABASES;"
+          mysql -h 127.0.0.1 -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" -e "SHOW DATABASES;"
+
 
       - name: Rodar testes e adicionar ao relatório
         run: |
