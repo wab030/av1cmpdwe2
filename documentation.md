@@ -1,3 +1,13 @@
+Geral
+
+Esse repositório está preparado para ser clonado, uma prova ser desenvolvida no folder xxxx, push e a correção é automatizada. 
+Os arquivos principais são o .github/workflows/test.yml e os arquivos dentro do folder testes. 
+
+
+
+
+
+
 Como utilizar o repositório
 
 git clone https://github.com/wab030/av1cmpdwe2.git

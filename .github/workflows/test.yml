@@ -10,18 +10,27 @@ jobs:
   relatorio-completo:
     runs-on: ubuntu-latest
 
+    env: # variáveis centralizadas
+      MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+      MYSQL_USER: ${{ secrets.MYSQL_USER }}
+      MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+      MYSQL_DATABASE: biblioteca
+      DB_HOST: 127.0.0.1
+      DB_NAME: biblioteca
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
     services:
       mysql:
         image: mysql:8
         env:
-          MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: biblioteca
-          MYSQL_USER: ${{ secrets.MYSQL_USER }}
-          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+          MYSQL_ROOT_PASSWORD: ${{ env.MYSQL_ROOT_PASSWORD }}
+          MYSQL_DATABASE: ${{ env.MYSQL_DATABASE }}
+          MYSQL_USER: ${{ env.MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ env.MYSQL_PASSWORD }}
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -h localhost -u${{ secrets.MYSQL_USER }} -p${{ secrets.MYSQL_PASSWORD }}"
+          --health-cmd="mysqladmin ping -h localhost -u${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }}"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
@@ -42,35 +51,34 @@ jobs:
         run: |
           echo "Esperando MySQL..."
           for i in {30..0}; do
-            if mysqladmin ping -h"127.0.0.1" -uroot -proot --silent; then
+            if mysqladmin ping -h"127.0.0.1" -uroot -p"$MYSQL_ROOT_PASSWORD" --silent; then
               echo "MySQL está rodando!"
               break
             fi
             echo "Aguardando MySQL... ($i segundos restantes)"
             sleep 2
           done
-      
-      # Cria um arquivo de relatório vazio para começar
+
       - name: Criar arquivo de relatório
         run: echo "# Relatório de Análise Automatizada" > relatorio-final.md
 
       - name: Criar usuário e esquema inicial
         run: |
-          mysql -h 127.0.0.1 -uroot -proot biblioteca < scripts/init.sql
+          mysql -h 127.0.0.1 -uroot -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE" < scripts/init.sql
 
       - name: Diagnosticar conexão com o usuário admin
         run: |
-          mysql -h 127.0.0.1 -u${{ secrets.MYSQL_USER }} -p${{ secrets.MYSQL_PASSWORD }} -e "SHOW DATABASES;"
+          mysql -h 127.0.0.1 -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" -e "SHOW DATABASES;"
 
       - name: Rodar testes e adicionar ao relatório
         run: |
           echo "## 🧪 Resultado dos Testes Unitários" >> relatorio-final.md
           npm test -- --colors=false 2>&1 | tee -a >> relatorio-final.md
         env:
-          DB_HOST: 127.0.0.1
-          DB_USER: ${{ secrets.MYSQL_USER }}
-          DB_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
-          DB_NAME: biblioteca
+          DB_HOST: ${{ env.DB_HOST }}
+          DB_USER: ${{ env.MYSQL_USER }}
+          DB_PASSWORD: ${{ env.MYSQL_PASSWORD }}
+          DB_NAME: ${{ env.DB_NAME }}
 
       - name: Rodar ESLint e adicionar ao relatório
         run: |
@@ -82,11 +90,10 @@ jobs:
           echo "## 🧠 Análise de Código com Gemini" >> relatorio-final.md
           node scripts/ai_review.js >> relatorio-final.md
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY: ${{ env.GEMINI_API_KEY }}
 
       - name: Consolidar relatório da IA
         run: |
-          # Adiciona o conteúdo do relatório da IA no relatório final
           cat reports/ai-code-review.md >> relatorio-final.md
 
       - name: Uploadar Relatório Final
