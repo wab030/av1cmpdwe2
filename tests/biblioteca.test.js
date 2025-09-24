@@ -32,7 +32,7 @@ describe("Sistema de Biblioteca - Prova", () => {
   test("2. Usuário deve conseguir reservar um livro válido", async () => {
     const res = await request(app)
       .post("/reservar")
-      .send({ email: "joao@example.com", livroId: 1 });
+      .send({ email: "joao@email.com", livroId: 1 });
 
     expect(res.status).toBe(200);
     expect(res.body.mensagem).toMatch(/reservado/i);
