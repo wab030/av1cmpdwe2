@@ -1,4 +1,5 @@
 ````md
+```javascript
 # Prova de Programação – Avaliação Prática
 
 **Duração:** 3 aulas

@@ -57,7 +57,7 @@ router.get('/mais-reservado', async (req, res) => {
       return res.status(404).json({ erro: 'Nenhum livro encontrado' });
     res.json(rows[0]);
   } catch (err) {
-    res.status(500).json({ erro: 'Erro ao consultar livro mais reservado' });
+    res.status(500).json({ erro: 'Erro ao consultar livro mais reservado', err });
   }
 }); 
 
