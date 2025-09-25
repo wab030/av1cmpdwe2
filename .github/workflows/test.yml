@@ -31,7 +31,7 @@ jobs:
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -h localhost -uadmin -pifsp@1234"
+          --health-cmd="mysqladmin ping -h localhost -u$MYSQL_USER --password=$MYSQL_PASSWORD"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
@@ -81,7 +81,7 @@ jobs:
         env:
           DB_HOST: 127.0.0.1
           DB_USER: admin
-          DB_PASSWORD: ifsp@1234
+          DB_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
           DB_NAME: biblioteca
 
       - name: Rodar ESLint e adicionar ao relatório
