@@ -6,6 +6,16 @@ on:
   pull_request:
     branches: [ "master" ]
 
+env:
+  MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+  MYSQL_USER: admin
+  MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+  MYSQL_DATABASE: biblioteca
+  DB_HOST: 127.0.0.1
+  DB_NAME: biblioteca
+  GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
+
 jobs:
   relatorio-completo:
     runs-on: ubuntu-latest
@@ -14,10 +24,10 @@ jobs:
       mysql:
         image: mysql:8
         env:
-          MYSQL_ROOT_PASSWORD: root
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
           MYSQL_DATABASE: biblioteca
           MYSQL_USER: admin
-          MYSQL_PASSWORD: ifsp@1234
+          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
         ports:
           - 3306:3306
         options: >-
@@ -60,7 +70,9 @@ jobs:
 
       - name: Diagnosticar conexão com o usuário admin
         run: |
-          mysql -h 127.0.0.1 -uadmin -pifsp@1234 -e "SHOW DATABASES;"
+          # mysql -h 127.0.0.1 -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" -e "SHOW DATABASES;"
+          mysql -h 127.0.0.1 -u"$MYSQL_USER" --password="$MYSQL_PASSWORD" -e "SHOW DATABASES;"
+
 
       - name: Rodar testes e adicionar ao relatório
         run: |
