@@ -79,7 +79,7 @@ jobs:
       - name: Análise de Código com IA (Gemini)
         run: |
           echo "## 🧠 Análise de Código com Gemini" >> relatorio-final.md
-          node scripts/ai_review.js >> relatorio-final.md
+          node scripts/ai_review.js >> relatorio-final.md 
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
