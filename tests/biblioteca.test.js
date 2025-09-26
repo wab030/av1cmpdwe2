@@ -1,7 +1,7 @@
 const request = require('supertest');
 const mysql = require('mysql2/promise');
 const app = require('../src/app');
-const pool = require('../src/db'); // se você usa pool no app
+const pool = require('../src/db'); // se você usa pool no app.
 
 let connection;
 let livroIds = [];
