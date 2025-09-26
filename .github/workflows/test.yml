@@ -14,7 +14,7 @@ jobs:
         image: mysql:8
         env:
           MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: biblioteca
+          MYSQL_DATABASE: cadastro
           MYSQL_USER: admin
           MYSQL_PASSWORD: ifsp@1234
         ports:
@@ -55,7 +55,7 @@ jobs:
 
       - name: Criar usuário e esquema inicial
         run: |
-          mysql -h 127.0.0.1 -uroot -proot biblioteca < scripts/init.sql
+          mysql -h 127.0.0.1 -uroot -proot cadastro < scripts/init.sql
 
       - name: Diagnosticar conexão com o usuário admin
         run: |
