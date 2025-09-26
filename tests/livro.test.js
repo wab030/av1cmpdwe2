@@ -1,7 +1,7 @@
 const request = require('supertest');
 // IMPORTANTE: Altera a importação para o novo arquivo 'app.js'
-const app = require('../app');
-const pool = require('../db');
+const app = require('../src/app');
+const pool = require('../src/db');
 
 // Define um livro válido para testes
 const livroValido = {

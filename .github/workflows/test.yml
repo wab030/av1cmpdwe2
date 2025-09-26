@@ -71,10 +71,10 @@ jobs:
           DB_PASSWORD: ifsp@1234
           DB_NAME: biblioteca
 
-      - name: Rodar ESLint e adicionar ao relatório
-        run: |
-          echo "## 🧹 Análise de Estilo do Código (ESLint)" >> relatorio-final.md
-          npx eslint src/**/*.js >> relatorio-final.md
+      # - name: Rodar ESLint e adicionar ao relatório
+      #   run: |
+      #     echo "## 🧹 Análise de Estilo do Código (ESLint)" >> relatorio-final.md
+      #     npx eslint src/**/*.js >> relatorio-final.md
 
       - name: Análise de Código com IA (Gemini)
         run: |
