@@ -50,8 +50,18 @@ jobs:
           done
       
       # Cria um arquivo de relatório vazio para começar
-      - name: Criar arquivo de relatório
-        run: echo "# Relatório de Análise Automatizada" > relatorio-final.md
+      - name: Criar arquivo de relatório com cabeçalho
+        run: |
+          STUDENT_LOGIN="${{ github.event.pull_request.user.login }}"
+          STUDENT_ID="${{ github.event.pull_request.user.id }}"
+          STUDENT_EMAIL="${STUDENT_ID}+${STUDENT_LOGIN}@users.noreply.github.com"
+          
+          echo "# Relatório de Análise Automatizada" > relatorio-final.md
+          echo "" >> relatorio-final.md
+          echo "### 👤 Informações do Aluno" >> relatorio-final.md
+          echo "* **Username:** \`$STUDENT_LOGIN\`" >> relatorio-final.md
+          echo "* **E-mail (No-Reply):** \`$STUDENT_EMAIL\`" >> relatorio-final.md
+          echo "---" >> relatorio-final.md
 
       - name: Criar usuário e esquema inicial
         run: |
@@ -71,10 +81,10 @@ jobs:
           DB_PASSWORD: ifsp@1234
           DB_NAME: biblioteca
 
-      # - name: Rodar ESLint e adicionar ao relatório
-      #   run: |
-      #     echo "## 🧹 Análise de Estilo do Código (ESLint)" >> relatorio-final.md
-      #     npx eslint src/**/*.js >> relatorio-final.md
+      - name: Rodar ESLint e adicionar ao relatório
+        run: |
+          echo "## 🧹 Análise de Estilo do Código (ESLint)" >> relatorio-final.md
+          npx eslint src/**/*.js >> relatorio-final.md
 
       - name: Análise de Código com IA (Gemini)
         run: |
