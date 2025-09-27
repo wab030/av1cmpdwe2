@@ -1,14 +1,15 @@
-const mysql = require("mysql2/promise");
+const mysql = require('mysql2/promise');
+require('dotenv').config(); // Usar variáveis de ambiente é a melhor prática
 
+// Configuração da conexão (Use as suas credenciais do MySQL)
 const pool = mysql.createPool({
-   host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'admin',
-  password: process.env.DB_PASSWORD || 'ifsp@1234',
-  database: process.env.DB_NAME || 'biblioteca',
-  port: process.env.DB_PORT || 3306,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
+    host: 'localhost', 
+    user: 'admin', 
+    password: 'ifsp@1234', 
+    database: 'cadastro',
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
 });
 
 module.exports = pool;
