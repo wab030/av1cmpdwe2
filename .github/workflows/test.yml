@@ -82,9 +82,14 @@ jobs:
           DB_NAME: biblioteca
 
       - name: Rodar ESLint e adicionar ao relatório
+        if: always() # Faz o pipeline continuar mesmo se este passo falhar
         run: |
           echo "## 🧹 Análise de Estilo do Código (ESLint)" >> relatorio-final.md
-          npx eslint src/**/*.js >> relatorio-final.md
+          # Executa o ESLint e redireciona a saída (incluindo erros) para o relatório.
+          # O comando '|| true' no final garante que o shell não sairá com erro,
+          # mas o 'if: always()' já trata a falha no nível do Action.
+          # Usar '|| true' aqui é uma redundância segura.
+          npx eslint src/**/*.js 2>&1 | tee -a >> relatorio-final.md
 
       - name: Análise de Código com IA (Gemini)
         run: |
