@@ -1,7 +1,7 @@
 -- Comando para criar o banco de dados (se ainda não existir)
 DROP DATABASE IF EXISTS cadastro;
 CREATE DATABASE IF NOT EXISTS cadastro;
-USE cadastro;
+USE cadastro; 
 
 -- Comando para criar a tabela de livros
 CREATE TABLE livros (
