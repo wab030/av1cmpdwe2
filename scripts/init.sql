@@ -1,47 +1,30 @@
--- Criar banco de dados biblioteca se não existir
-DROP DATABASE biblioteca;
-CREATE DATABASE IF NOT EXISTS biblioteca;
-USE biblioteca;
+-- Comando para criar o banco de dados (se ainda não existir)
+DROP DATABASE IF EXISTS cadastro;
+CREATE DATABASE IF NOT EXISTS cadastro;
+USE cadastro;
 
--- Criar usuário admin com senha ifsp@1234
-CREATE USER IF NOT EXISTS 'admin'@'%' IDENTIFIED BY 'ifsp@1234';
-GRANT ALL PRIVILEGES ON biblioteca.* TO 'admin'@'%';
-FLUSH PRIVILEGES;
-
--- Criar tabelas do sistema
-CREATE TABLE IF NOT EXISTS livros (
+-- Comando para criar a tabela de livros
+CREATE TABLE livros (
     id INT AUTO_INCREMENT PRIMARY KEY,
     titulo VARCHAR(255) NOT NULL,
-    autor VARCHAR(255) NOT NULL,
-    ano_publicacao INT,
-    disponivel BOOLEAN DEFAULT TRUE,
-    exemplares INT DEFAULT 1  -- ⭐ COLUNA QUE FALTAVA!
+    autor VARCHAR(255),
+    ano_publicacao INT
 );
 
-CREATE TABLE IF NOT EXISTS usuarios (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(255) NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL
-);
+-- 1. Insere o livro "1984"
+INSERT INTO livros (titulo, autor, ano_publicacao) VALUES 
+('1984', 'George Orwell', 1949);
 
-CREATE TABLE IF NOT EXISTS emprestimos (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    livro_id INT,
-    usuario_id INT,
-    data_emprestimo DATE,
-    data_devolucao DATE,
-    FOREIGN KEY (livro_id) REFERENCES livros(id),
-    FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
-);
+-- 2. Insere o livro "O Pequeno Príncipe"
+INSERT INTO livros (titulo, autor, ano_publicacao) VALUES 
+('O Pequeno Príncipe', 'Antoine de Saint-Exupéry', 1943);
 
--- Inserir dados de exemplo
-INSERT IGNORE INTO livros (titulo, autor, ano_publicacao) VALUES
-('Dom Casmurro', 'Machado de Assis', 1899),
-('O Cortiço', 'Aluísio Azevedo', 1890),
-('Iracema', 'José de Alencar', 1865);
+-- 3. Insere o livro "A Revolução dos Bichos"
+INSERT INTO livros (titulo, autor, ano_publicacao) VALUES 
+('A Revolução dos Bichos', 'George Orwell', 1945);
 
-INSERT IGNORE INTO usuarios (nome, email) VALUES
-('João Silva', 'joao@email.com'),
-('Maria Santos', 'maria@email.com'),
-('João Teste', 'joao@example.com'),      -- ⭐ USUÁRIO DOS TESTES
-('Maria Teste', 'maria@example.com');    -- ⭐ USUÁRIO DOS TESTES
+-- Opcional: Verifica se os dados foram inseridos corretamente
+SELECT * FROM livros;
+
+-- Garante que o usuário 'admin' possa acessar o banco de dados 'cadastro'
+GRANT ALL PRIVILEGES ON cadastro.* TO 'admin'@'%';
