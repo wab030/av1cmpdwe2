@@ -3,7 +3,10 @@ name: Teste da Prova de Programação
 on:
   push:
     branches: [ "master" ]
-  pull_request:
+  # 1. MUDANÇA PRINCIPAL: Usamos pull_request_target para PRs,
+  # garantindo o acesso aos secrets do repositório base.
+  pull_request_target:
+    types: [opened, synchronize, reopened]
     branches: [ "master" ]
 
 jobs:
@@ -26,8 +29,24 @@ jobs:
           --health-retries=5
 
     steps:
-      - name: Checkout código
-        uses: actions/checkout@v3
+      # 2. MUDANÇA NO CHECKOUT: Usamos um checkout seguro em dois passos.
+      
+      # Passo 2a: Checkout do seu repositório (BASE) - Essencial para que o workflow rode
+      - name: Checkout Base Repository
+        uses: actions/checkout@v4
+        with:
+          # Faz o checkout da branch master do seu repo.
+          ref: ${{ github.event.repository.default_branch }}
+
+      # Passo 2b: Fetch e Checkout SEGURO do código do aluno (HEAD)
+      # Este passo substitui o código da sua branch pelo código do Pull Request.
+      - name: Fetch and Checkout Student Code (HEAD of PR)
+        if: github.event_name == 'pull_request_target'
+        run: |
+          echo "Fetching code from fork: ${{ github.event.pull_request.head.repo.clone_url }}"
+          git fetch ${{ github.event.pull_request.head.repo.clone_url }} ${{ github.event.pull_request.head.ref }}
+          git checkout -B ${{ github.event.pull_request.head.ref }} FETCH_HEAD
+          echo "Student code is now active."
 
       - name: Instalar Node.js
         uses: actions/setup-node@v3
@@ -49,12 +68,20 @@ jobs:
             sleep 2
           done
       
-      # Cria um arquivo de relatório vazio para começar
+      # O restante do pipeline permanece o mesmo, mas agora
+      # a etapa Gemini terá acesso ao secret.
+      
       - name: Criar arquivo de relatório com cabeçalho
         run: |
-          STUDENT_LOGIN="${{ github.event.pull_request.user.login }}"
-          STUDENT_ID="${{ github.event.pull_request.user.id }}"
-          STUDENT_EMAIL="${STUDENT_ID}+${STUDENT_LOGIN}@users.noreply.github.com"
+          # Garante que o username só seja tentado se for um PR
+          if [ "${{ github.event_name }}" == "pull_request_target" ]; then
+              STUDENT_LOGIN="${{ github.event.pull_request.user.login }}"
+              STUDENT_ID="${{ github.event.pull_request.user.id }}"
+              STUDENT_EMAIL="${STUDENT_ID}+${STUDENT_LOGIN}@users.noreply.github.com"
+          else
+              STUDENT_LOGIN="${{ github.actor }}"
+              STUDENT_EMAIL="${{ github.actor }}@users.noreply.github.com"
+          fi
           
           echo "# Relatório de Análise Automatizada" > relatorio-final.md
           echo "" >> relatorio-final.md
@@ -79,19 +106,16 @@ jobs:
           DB_HOST: 127.0.0.1
           DB_USER: admin
           DB_PASSWORD: ifsp@1234
-          DB_NAME: biblioteca
+          DB_NAME: cadastro
 
       - name: Rodar ESLint e adicionar ao relatório
-        if: always() # Faz o pipeline continuar mesmo se este passo falhar
+        if: always()
         run: |
           echo "## 🧹 Análise de Estilo do Código (ESLint)" >> relatorio-final.md
-          # Executa o ESLint e redireciona a saída (incluindo erros) para o relatório.
-          # O comando '|| true' no final garante que o shell não sairá com erro,
-          # mas o 'if: always()' já trata a falha no nível do Action.
-          # Usar '|| true' aqui é uma redundância segura.
           npx eslint src/**/*.js 2>&1 | tee -a >> relatorio-final.md
 
       - name: Análise de Código com IA (Gemini)
+        # Este passo agora funcionará porque o workflow roda com acesso total aos Secrets
         run: |
           echo "## 🧠 Análise de Código com Gemini" >> relatorio-final.md
           node scripts/ai_review.js >> relatorio-final.md 
@@ -100,11 +124,11 @@ jobs:
 
       - name: Consolidar relatório da IA
         run: |
-          # Adiciona o conteúdo do relatório da IA no relatório final
           cat reports/ai-code-review.md >> relatorio-final.md
 
       - name: Uploadar Relatório Final
         uses: actions/upload-artifact@v4
         with:
-          name: relatorio-completo
+          # É bom diferenciar o nome do artefato por aluno, se possível
+          name: Relatorio-Completo-${{ github.event.pull_request.user.login || github.actor }}
           path: relatorio-final.md
