@@ -1,5 +1,5 @@
 -- Comando para criar o banco de dados (se ainda não existir)
-DROP DATABASE cadastro;
+DROP DATABASE IF EXISTS cadastro;
 CREATE DATABASE IF NOT EXISTS cadastro;
 USE cadastro;
 
@@ -25,3 +25,7 @@ INSERT INTO livros (titulo, autor, ano_publicacao) VALUES
 
 -- Opcional: Verifica se os dados foram inseridos corretamente
 SELECT * FROM livros;
+
+-- Garante que o usuário 'admin' possa acessar o banco de dados 'cadastro'
+GRANT ALL PRIVILEGES ON cadastro.* TO 'admin'@'%' IDENTIFIED BY 'ifsp@1234';
+FLUSH PRIVILEGES;
