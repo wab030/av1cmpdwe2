@@ -13,6 +13,7 @@ app.use(express.static('public')); // Servir arquivos estáticos
 
 // Rotas da Aplicação
 app.use('/', livroRoutes);
+console.log('ewt');
 
 // Middleware de tratamento de erros global
 app.use((err, req, res, next) => {
