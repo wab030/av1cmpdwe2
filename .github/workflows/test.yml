@@ -17,6 +17,9 @@ jobs:
     # ADICIONE ESTE BLOCO:
     permissions:
       contents: read # Mínimo necessário para a execução.
+    env:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
     # FIM DO BLOCO
     services:
       mysql:
@@ -34,23 +37,25 @@ jobs:
           --health-retries=5
 
     steps:
-      # 2. MUDANÇA NO CHECKOUT: Usamos um checkout seguro em dois passos.
-      
-      # Passo 2a: Checkout do seu repositório (BASE) - Essencial para que o workflow rode
-      - name: Checkout Base Repository
+      # 1. Checkout do seu repositório (BASE) - Apenas o necessário para o YAML
+      # Removemos o ref para ser mais genérico.
+      - name: Checkout Base Repository (Para Ações)
         uses: actions/checkout@v4
-        with:
-          # Faz o checkout da branch master do seu repo.
-          ref: ${{ github.event.repository.default_branch }}
+        # Não especificamos 'ref', usa o contexto do workflow.
 
-      # Passo 2b: Fetch e Checkout SEGURO do código do aluno (HEAD)
-      # Este passo substitui o código da sua branch pelo código do Pull Request.
+      # 2. Fetch e Checkout SEGURO do código do aluno (HEAD)
       - name: Fetch and Checkout Student Code (HEAD of PR)
         if: github.event_name == 'pull_request_target'
         run: |
           echo "Fetching code from fork: ${{ github.event.pull_request.head.repo.clone_url }}"
+          
+          # Ação 1: Fetch do código do aluno
           git fetch ${{ github.event.pull_request.head.repo.clone_url }} ${{ github.event.pull_request.head.ref }}
-          git checkout -B ${{ github.event.pull_request.head.ref }} FETCH_HEAD
+          
+          # Ação 2: Sobrescreve TUDO com o código do aluno.
+          # Isso deve garantir que o scripts/init.sql do aluno seja o único no diretório.
+          git checkout -f FETCH_HEAD
+          
           echo "Student code is now active."
 
       - name: Instalar Node.js
@@ -124,8 +129,6 @@ jobs:
         run: |
           echo "## 🧠 Análise de Código com Gemini" >> relatorio-final.md
           node scripts/ai_review.js >> relatorio-final.md 
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
       - name: Consolidar relatório da IA
         run: |
