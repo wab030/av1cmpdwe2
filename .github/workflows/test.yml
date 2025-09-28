@@ -17,9 +17,7 @@ jobs:
     # ADICIONE ESTE BLOCO:
     permissions:
       contents: read # Mínimo necessário para a execução.
-    env:
-      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-
+    
     # FIM DO BLOCO
     services:
       mysql:
@@ -128,7 +126,8 @@ jobs:
         # Este passo agora funcionará porque o workflow roda com acesso total aos Secrets
         run: |
           echo "## 🧠 Análise de Código com Gemini" >> relatorio-final.md
-          node scripts/ai_review.js >> relatorio-final.md 
+          # Força a variável de ambiente APENAS para este comando:
+          GEMINI_API_KEY="${{ secrets.GEMINI_API_KEY }}" node scripts/ai_review.js >> relatorio-final.md 
 
       - name: Consolidar relatório da IA
         run: |
