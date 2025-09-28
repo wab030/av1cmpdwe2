@@ -27,5 +27,4 @@ INSERT INTO livros (titulo, autor, ano_publicacao) VALUES
 SELECT * FROM livros;
 
 -- Garante que o usuário 'admin' possa acessar o banco de dados 'cadastro'
-CREATE USER 'admin'@'%' IDENTIFIED BY 'ifsp@1234';
 GRANT ALL PRIVILEGES ON cadastro.* TO 'admin'@'%';
