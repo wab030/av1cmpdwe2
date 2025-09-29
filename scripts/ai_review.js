@@ -10,7 +10,7 @@ const { GoogleGenAI } = require("@google/genai");
 async function analyzeFile(client, filePath) {
   const code = fs.readFileSync(filePath, "utf-8");
   
-  // Prompt customizado para forçar a geração de uma tabela de resumo
+  // Prompt customizado, exigindo a nota em formato padronizado
   const prompt = `
 Você é um revisor de código que analisa boas práticas, legibilidade, segurança e estrutura do código JavaScript.
 Analise o código abaixo e forneça comentários:
@@ -18,7 +18,7 @@ Analise o código abaixo e forneça comentários:
 1.  **Pontos Fortes** e **Sugestões de Melhoria** (em texto corrido e bem detalhado).
 2.  **AO FINAL DE SUA REVISÃO DETALHADA,** crie uma **tabela de resumo** no formato Markdown com duas colunas: **"Problema Principal"** e **"Local/Linha Sugerida"**. 
     * Se não houver problemas graves, a tabela deve ter uma única linha dizendo "Nenhum problema grave encontrado" na coluna "Problema Principal".
-3.  **Atribua uma nota de 0 a 10 baseado nas suas análises do código encontrado. 
+3.  **No final da sua análise detalhada, e antes da tabela de resumo, forneça a NOTA do arquivo no formato "NOTA_FINAL: X.Y" onde X.Y é a pontuação de 0.0 a 10.0. Certifique-se de que a nota esteja em uma linha separada.**
 
 Código:
 \`\`\`js
@@ -47,14 +47,13 @@ async function main() {
   const apiKey = process.env.GEMINI_API_KEY;
 
   if (!apiKey) {
-    // Se a chave não estiver no process.env, o erro será capturado pelo try/catch
-    // na função analyzeFile, mas colocamos um fallback.
     throw new Error("GEMINI_API_KEY não encontrada. Abortando análise.");
   }
   
   const client = new GoogleGenAI({ apiKey });
   const jsFiles = [];
-  const resumoProblemas = []; // Array para coletar os resumos de cada arquivo
+  const resumoProblemas = []; 
+  const notas = []; // Array para coletar as notas de cada arquivo
 
   // Função auxiliar para percorrer os diretórios
   function walk(dir) {
@@ -63,7 +62,6 @@ async function main() {
       const full = path.join(dir, f);
       const stat = fs.statSync(full);
       if (stat.isDirectory()) {
-        // Ignorar pastas comuns de build ou dependências
         if (f === 'node_modules' || f === 'tests' || f === 'reports') {
             continue;
         }
@@ -86,54 +84,74 @@ async function main() {
     try {
       const { full_feedback } = await analyzeFile(client, filePath);
       
-      // 1. Adiciona o feedback completo ao relatório
-      report += `## Arquivo: ${filePath}\n\n${full_feedback}\n\n`;
+      // 1. Extração da Nota do Arquivo
+      const notaRegex = /NOTA_FINAL:\s*(\d+(\.\d{1,2})?)/;
+      const matchNota = full_feedback.match(notaRegex);
+      let notaArquivo = 'N/A';
 
-      // 2. Extração da tabela de resumo para o índice geral
+      if (matchNota && matchNota[1]) {
+          const nota = parseFloat(matchNota[1]);
+          if (!isNaN(nota)) {
+              notas.push(nota);
+              notaArquivo = nota.toFixed(1);
+          }
+      }
+
+      // 2. Adiciona o feedback completo ao relatório, incluindo a nota individual
+      report += `## Arquivo: ${filePath} (Nota: ${notaArquivo}/10)\n\n${full_feedback}\n\n`;
+
+      // 3. Extração da tabela de resumo para o índice geral
       const tableNameHeader = "Problema Principal";
       const tableStartMarker = `| ${tableNameHeader}`;
       const tableStart = full_feedback.indexOf(tableStartMarker);
       
       if (tableStart !== -1) {
-          // Extrai o conteúdo da tabela, garantindo que pegue o cabeçalho, separador e linhas
           const tableContent = full_feedback.substring(tableStart);
-          
-          // Usa RegEx para encontrar a tabela completa (cabeçalho + separador + conteúdo)
-          // e parar antes do próximo bloco de texto (duas quebras de linha).
           const tableRegex = /(\|.*?\n)+\|.*?/s; 
           const match = tableContent.match(tableRegex);
 
           if (match && match[0]) {
-              // Adiciona a tabela ao nosso resumo, prefixando com o nome do arquivo
               resumoProblemas.push(`### Resumo do Arquivo: \`${filePath}\`\n${match[0].trim()}\n`);
           }
       }
 
     } catch (err) {
       // Captura o erro da API (403, 500, etc.) e o registra no relatório
-      report += `## Arquivo: ${filePath}\n\n**Erro ao analisar**: ${err.message}\n\n`;
+      report += `## Arquivo: ${filePath} (Nota: N/A)\n\n**Erro ao analisar**: ${err.message}\n\n`;
     }
   }
 
-  // 3. Adicionar o resumo final ao relatório
+  // 4. CÁLCULO E INSERÇÃO DA NOTA FINAL GERAL
+  let notaGeral = "N/A";
+  if (notas.length > 0) {
+      const soma = notas.reduce((acc, curr) => acc + curr, 0);
+      const media = soma / notas.length;
+      notaGeral = media.toFixed(2); // Duas casas decimais
+  }
+  
+  // Injeta a Nota Final Geral no topo do relatório
+  const notaHeader = `## 🌟 NOTA FINAL GERAL DA REVISÃO DE CÓDIGO: ${notaGeral}/10\n\n`;
+  report = notaHeader + report;
+
+  // 5. Adicionar o resumo de problemas final ao relatório
   report += "\n---\n\n";
 
   let tabelaGeral = "## 📊 Resumo de Problemas por Arquivo\n\n";
   if (resumoProblemas.length > 0) {
       tabelaGeral += "Este é o resumo de problemas extraídos automaticamente do feedback detalhado de cada arquivo. Use-o para priorizar correções:\n\n";
-      tabelaGeral += resumoProblemas.join('\n'); // Concatena todos os resumos individuais
+      tabelaGeral += resumoProblemas.join('\n'); 
   } else {
       tabelaGeral += "Nenhum arquivo JavaScript encontrado para análise ou não foi possível extrair os resumos das tabelas.\n\n";
   }
   
-  // Adiciona o resumo geral ao final do relatório
   report += tabelaGeral;
 
+  // 6. Geração do arquivo final
   fs.writeFileSync("reports/ai-code-review.md", report, "utf-8");
 }
 
 main().catch(err => {
-  // Em caso de falha fatal (ex: problemas de I/O), registra o erro no console do GA
+  // Em caso de falha fatal (problemas de I/O, erro na chave, etc.), registra o erro e força o exit code 1
   console.error("Falha fatal na execução do ai_review:", err.message || err);
   process.exit(1);
 });

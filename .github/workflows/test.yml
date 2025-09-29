@@ -82,10 +82,13 @@ jobs:
       # a etapa Gemini terá acesso ao secret.
       
       - name: Criar arquivo de relatório com cabeçalho
+        # ADICIONADO: Variável TZ para forçar o fuso horário de Brasília
+        env:
+          TZ: America/Sao_Paulo 
         run: |
           # 1. Captura a data e hora formatadas
-          CURRENT_DATE=$(date +"%Y-%m-%d %H:%M:%S %Z")
-
+          CURRENT_DATE=$(date +"%d/%m/%Y %H:%M:%S %Z")
+          
           # 2. Lógica para determinar o login do aluno
           if [ "${{ github.event_name }}" == "pull_request_target" ]; then
               STUDENT_LOGIN="${{ github.event.pull_request.user.login }}"
@@ -100,13 +103,13 @@ jobs:
           
           # 3. Adiciona a data/hora e o evento
           echo "### ⏱️ Executado em:" >> relatorio-final.md
-          echo "* **Data/Hora:** \`$CURRENT_DATE\`" >> relatorio-final.md
+          echo "* **Data/Hora:** \`${CURRENT_DATE}\`" >> relatorio-final.md
           echo "* **Evento:** \`${{ github.event_name }}\`" >> relatorio-final.md
           echo "---" >> relatorio-final.md
 
           echo "### 👤 Informações do Aluno" >> relatorio-final.md
-          echo "* **Username:** \`$STUDENT_LOGIN\`" >> relatorio-final.md
-          echo "* **E-mail (No-Reply):** \`$STUDENT_EMAIL\`" >> relatorio-final.md
+          echo "* **Username:** \`${STUDENT_LOGIN}\`" >> relatorio-final.md
+          echo "* **E-mail (No-Reply):** \`${STUDENT_EMAIL}\`" >> relatorio-final.md
           echo "---" >> relatorio-final.md
 
       - name: Criar usuário e esquema inicial
@@ -135,6 +138,7 @@ jobs:
 
       - name: Análise de Código com IA (Gemini)
         # Este passo agora funcionará porque o workflow roda com acesso total aos Secrets
+        if: always() 
         run: |
           echo "## 🧠 Análise de Código com Gemini" >> relatorio-final.md
           # Injeta a chave, executa o script e envia a saída (stdout e stderr via 2>&1)
@@ -142,8 +146,29 @@ jobs:
           GEMINI_API_KEY="${{ secrets.GEMINI_API_KEY }}" node scripts/ai_review.js 2>&1 | tee -a relatorio-final.md
 
       - name: Consolidar relatório da IA
+        if: always()
         run: |
-          cat reports/ai-code-review.md >> relatorio-final.md
+          ANALYSIS_FILE="reports/ai-code-review.md"
+          
+          # 1. VERIFICA se o arquivo foi gerado pelo script anterior
+          if [ -f "$ANALYSIS_FILE" ]; then
+              # Se o arquivo existir, anexa o conteúdo (com sucesso)
+              echo "✅ Análise da IA concluída e anexada ao relatório." 
+              cat "$ANALYSIS_FILE" >> relatorio-final.md
+          else
+              # Se o arquivo NÃO existir (falha da IA), adiciona um aviso CLARO
+              echo "---" >> relatorio-final.md
+              echo "## ⚠️ FALHA NA ANÁLISE DE CÓDIGO COM GEMINI" >> relatorio-final.md
+              echo "A análise de código foi interrompida ou falhou. Isso pode ocorrer por um dos seguintes motivos:" >> relatorio-final.md
+              echo "* **Chave de API Inválida (403):** O secret 'GEMINI_API_KEY' não foi acessado (verifique o log do passo anterior)." >> relatorio-final.md
+              echo "* **Timeout:** A chamada à API da IA demorou demais." >> relatorio-final.md
+              echo "* **Erro no Script:** Verifique o log do passo 'Análise de Código com IA (Gemini)' para mais detalhes." >> relatorio-final.md
+              echo "" >> relatorio-final.md
+              echo "❌ Não foi possível gerar o resumo de problemas." >> relatorio-final.md
+              
+              # Também adiciona uma mensagem clara de falha no console (log)
+              echo "::error::O arquivo de análise do Gemini ($ANALYSIS_FILE) não foi gerado. A etapa de AI falhou."
+          fi
 
       - name: Uploadar Relatório Final
         uses: actions/upload-artifact@v4
