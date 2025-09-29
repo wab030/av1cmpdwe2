@@ -1,28 +1,10 @@
 const express = require('express');
 const app = express();
-const livroRoutes = require('./routes/livroRoutes');
 
-// Configuração do EJS como motor de visualização
-app.set('view engine', 'ejs');
-app.set('views', 'src/views');
+// Aqui você deve desenvolver toda a configuração do seu app. 
 
-// Middlewares
-app.use(express.urlencoded({ extended: true })); // Para parsear dados de formulário
-app.use(express.json()); // Para parsear JSON
-app.use(express.static('public')); // Servir arquivos estáticos
+//ATENÇÂO NÃO COLOQUE O COMANDO app.listen nesse arquivo. Ele já está no server, que é o arquivo principal da sua aplicação. 
 
-// Rotas da Aplicação
-app.use('/', livroRoutes);
-console.log('ewt');
+// Para iniciar sua aplicação digite nodemon server.js
 
-// Middleware de tratamento de erros global
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    // Para erros não tratados ou de DB
-    res.status(500).render('error', { 
-        message: "Erro interno do servidor. Tente novamente mais tarde." 
-    });
-});
-
-// Exporta a instância do aplicativo para ser usada pelo server.js e pelos testes!
 module.exports = app;
