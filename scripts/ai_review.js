@@ -18,6 +18,7 @@ Analise o código abaixo e forneça comentários:
 1.  **Pontos Fortes** e **Sugestões de Melhoria** (em texto corrido e bem detalhado).
 2.  **AO FINAL DE SUA REVISÃO DETALHADA,** crie uma **tabela de resumo** no formato Markdown com duas colunas: **"Problema Principal"** e **"Local/Linha Sugerida"**. 
     * Se não houver problemas graves, a tabela deve ter uma única linha dizendo "Nenhum problema grave encontrado" na coluna "Problema Principal".
+3.  **Atribua uma nota de 0 a 10 baseado nas suas análises do código encontrado. 
 
 Código:
 \`\`\`js
