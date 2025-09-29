@@ -134,6 +134,7 @@ jobs:
           npx eslint src/**/*.js 2>&1 | tee -a >> relatorio-final.md
 
       - name: Análise de Código com IA (Gemini)
+        # Este passo agora funcionará porque o workflow roda com acesso total aos Secrets
         run: |
           echo "## 🧠 Análise de Código com Gemini" >> relatorio-final.md
           # Injeta a chave, executa o script e envia a saída (stdout e stderr via 2>&1)
