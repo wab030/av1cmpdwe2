@@ -137,8 +137,9 @@ jobs:
         # Este passo agora funcionará porque o workflow roda com acesso total aos Secrets
         run: |
           echo "## 🧠 Análise de Código com Gemini" >> relatorio-final.md
-          # Força a variável de ambiente APENAS para este comando:
-          GEMINI_API_KEY="${{ secrets.GEMINI_API_KEY }}" node scripts/ai_review.js >> relatorio-final.md 
+          # Injeta a chave, executa o script e envia a saída (stdout e stderr via 2>&1)
+          # tanto para o console (tee) quanto para o arquivo (-a).
+          GEMINI_API_KEY="${{ secrets.GEMINI_API_KEY }}" node scripts/ai_review.js 2>&1 | tee -a relatorio-final.md
 
       - name: Consolidar relatório da IA
         run: |

@@ -1,6 +1,7 @@
 -- Comando para criar o banco de dados (se ainda não existir)
 DROP DATABASE IF EXISTS cadastro;
 CREATE DATABASE IF NOT EXISTS cadastro;
+
 USE cadastro;
 
 -- Comando para criar a tabela de livros
@@ -27,4 +28,6 @@ INSERT INTO livros (titulo, autor, ano_publicacao) VALUES
 SELECT * FROM livros;
 
 -- Garante que o usuário 'admin' possa acessar o banco de dados 'cadastro'
+
 GRANT ALL PRIVILEGES ON cadastro.* TO 'admin'@'%';
+
