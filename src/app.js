@@ -20,7 +20,7 @@ app.use((err, req, res, next) => {
     console.error(err.stack);
     // Para erros não tratados ou de DB
     res.status(500).render('error', { 
-        message: "Erro interno do servidor. Tente novamente mais tarde." 
+        message: "Erro interno dmnb,mbn,mnb,mnbo servidor. Tente novamente mais tarde." 
     });
 });
 
