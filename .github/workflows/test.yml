@@ -3,18 +3,29 @@ name: Teste da Prova de Programação
 on:
   push:
     branches: [ "master" ]
-  pull_request:
+  # Evento que dispara no fork do aluno, com permissões baixas.
+  # pull_request: 
+  #   branches: [ "master" ]
+  # Evento que queremos usar, que dispara no seu repo, com permissões altas.
+  pull_request_target: 
+    types: [opened, synchronize, reopened]
     branches: [ "master" ]
 
 jobs:
   relatorio-completo:
     runs-on: ubuntu-latest
+    # ADICIONE ESTE BLOCO:
+    permissions:
+      contents: read # Mínimo necessário para a execução.
+    env:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+    
+    # FIM DO BLOCO
     services:
       mysql:
         image: mysql:8
         env:
           MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: biblioteca
           MYSQL_USER: admin
           MYSQL_PASSWORD: ifsp@1234
         ports:
@@ -26,8 +37,26 @@ jobs:
           --health-retries=5
 
     steps:
-      - name: Checkout código
-        uses: actions/checkout@v3
+      # 1. Checkout do seu repositório (BASE) - Apenas o necessário para o YAML
+      # Removemos o ref para ser mais genérico.
+      - name: Checkout Base Repository (Para Ações)
+        uses: actions/checkout@v4
+        # Não especificamos 'ref', usa o contexto do workflow.
+
+      # 2. Fetch e Checkout SEGURO do código do aluno (HEAD)
+      - name: Fetch and Checkout Student Code (HEAD of PR)
+        if: github.event_name == 'pull_request_target'
+        run: |
+          echo "Fetching code from fork: ${{ github.event.pull_request.head.repo.clone_url }}"
+          
+          # Ação 1: Fetch do código do aluno
+          git fetch ${{ github.event.pull_request.head.repo.clone_url }} ${{ github.event.pull_request.head.ref }}
+          
+          # Ação 2: Sobrescreve TUDO com o código do aluno.
+          # Isso deve garantir que o scripts/init.sql do aluno seja o único no diretório.
+          git checkout -f FETCH_HEAD
+          
+          echo "Student code is now active."
 
       - name: Instalar Node.js
         uses: actions/setup-node@v3
@@ -49,13 +78,40 @@ jobs:
             sleep 2
           done
       
-      # Cria um arquivo de relatório vazio para começar
-      - name: Criar arquivo de relatório
-        run: echo "# Relatório de Análise Automatizada" > relatorio-final.md
+      # O restante do pipeline permanece o mesmo, mas agora
+      # a etapa Gemini terá acesso ao secret.
+      
+      - name: Criar arquivo de relatório com cabeçalho
+        run: |
+          # 1. Captura a data e hora formatadas
+          CURRENT_DATE=$(date +"%Y-%m-%d %H:%M:%S %Z")
+
+          # 2. Lógica para determinar o login do aluno
+          if [ "${{ github.event_name }}" == "pull_request_target" ]; then
+              STUDENT_LOGIN="${{ github.event.pull_request.user.login }}"
+              STUDENT_ID="${{ github.event.pull_request.user.id }}"
+              STUDENT_EMAIL="${STUDENT_ID}+${STUDENT_LOGIN}@users.noreply.github.com"
+          else
+              STUDENT_LOGIN="${{ github.actor }}"
+              STUDENT_EMAIL="${{ github.actor }}@users.noreply.github.com"
+          fi
+          
+          echo "# Relatório de Análise Automatizada" > relatorio-final.md
+          
+          # 3. Adiciona a data/hora e o evento
+          echo "### ⏱️ Executado em:" >> relatorio-final.md
+          echo "* **Data/Hora:** \`$CURRENT_DATE\`" >> relatorio-final.md
+          echo "* **Evento:** \`${{ github.event_name }}\`" >> relatorio-final.md
+          echo "---" >> relatorio-final.md
+
+          echo "### 👤 Informações do Aluno" >> relatorio-final.md
+          echo "* **Username:** \`$STUDENT_LOGIN\`" >> relatorio-final.md
+          echo "* **E-mail (No-Reply):** \`$STUDENT_EMAIL\`" >> relatorio-final.md
+          echo "---" >> relatorio-final.md
 
       - name: Criar usuário e esquema inicial
         run: |
-          mysql -h 127.0.0.1 -uroot -proot biblioteca < scripts/init.sql
+          mysql -h 127.0.0.1 -uroot -proot < scripts/init.sql
 
       - name: Diagnosticar conexão com o usuário admin
         run: |
@@ -69,27 +125,28 @@ jobs:
           DB_HOST: 127.0.0.1
           DB_USER: admin
           DB_PASSWORD: ifsp@1234
-          DB_NAME: biblioteca
+          DB_NAME: cadastro
 
       - name: Rodar ESLint e adicionar ao relatório
+        if: always()
         run: |
           echo "## 🧹 Análise de Estilo do Código (ESLint)" >> relatorio-final.md
-          npx eslint src/**/*.js >> relatorio-final.md
+          npx eslint src/**/*.js 2>&1 | tee -a >> relatorio-final.md
 
       - name: Análise de Código com IA (Gemini)
+        # Este passo agora funcionará porque o workflow roda com acesso total aos Secrets
         run: |
           echo "## 🧠 Análise de Código com Gemini" >> relatorio-final.md
-          node scripts/ai_review.js >> relatorio-final.md
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          # Força a variável de ambiente APENAS para este comando:
+          GEMINI_API_KEY="${{ secrets.GEMINI_API_KEY }}" node scripts/ai_review.js >> relatorio-final.md 
 
       - name: Consolidar relatório da IA
         run: |
-          # Adiciona o conteúdo do relatório da IA no relatório final
           cat reports/ai-code-review.md >> relatorio-final.md
 
       - name: Uploadar Relatório Final
         uses: actions/upload-artifact@v4
         with:
-          name: relatorio-completo
+          # É bom diferenciar o nome do artefato por aluno, se possível
+          name: Relatorio-Completo-${{ github.event.pull_request.user.login || github.actor }}
           path: relatorio-final.md
