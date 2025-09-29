@@ -21,6 +21,12 @@ Clone o seu fork.
 Desenvolva a prova dentro do folder src. 
 ***ATENÇÃO*** NÃO ALTERE NENHUM FOLDER A NÃO SER O SRC. 
 
+Observação importante: Crie dois arquivos na raiz do seu projeto
+
+server.js: Conterá todas a configuração do servidor, mas sem o app.listen. Esse arquivo deve exportar a varíavel app. 
+app.js: Importa o app e coloca o servidor no ar com o comando app.listen. Isso é fundamental para os testes automatizados funcionar. 
+
+
 Suba os arquivos para o seu fork no github. 
 
 Análise o relatório do actions. Se quiser algo mais detalhado você precisa inserir um segredo para que a IA rode no seu repositório. 
