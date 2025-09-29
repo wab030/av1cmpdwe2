@@ -4,8 +4,8 @@ on:
   push:
     branches: [ "master" ]
   # Evento que dispara no fork do aluno, com permissões baixas.
-  pull_request: 
-    branches: [ "master" ]
+  # pull_request: 
+  #   branches: [ "master" ]
   # Evento que queremos usar, que dispara no seu repo, com permissões altas.
   pull_request_target: 
     types: [opened, synchronize, reopened]
@@ -13,7 +13,6 @@ on:
 
 jobs:
   relatorio-completo:
-    if: github.event_name == 'push' || github.event_name == 'pull_request_target'
     runs-on: ubuntu-latest
     # ADICIONE ESTE BLOCO:
     permissions:
