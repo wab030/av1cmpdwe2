@@ -81,7 +81,10 @@ jobs:
       
       - name: Criar arquivo de relatório com cabeçalho
         run: |
-          # Garante que o username só seja tentado se for um PR
+          # 1. Captura a data e hora formatadas
+          CURRENT_DATE=$(date +"%Y-%m-%d %H:%M:%S %Z")
+
+          # 2. Lógica para determinar o login do aluno
           if [ "${{ github.event_name }}" == "pull_request_target" ]; then
               STUDENT_LOGIN="${{ github.event.pull_request.user.login }}"
               STUDENT_ID="${{ github.event.pull_request.user.id }}"
@@ -92,7 +95,13 @@ jobs:
           fi
           
           echo "# Relatório de Análise Automatizada" > relatorio-final.md
-          echo "" >> relatorio-final.md
+          
+          # 3. Adiciona a data/hora e o evento
+          echo "### ⏱️ Executado em:" >> relatorio-final.md
+          echo "* **Data/Hora:** \`$CURRENT_DATE\`" >> relatorio-final.md
+          echo "* **Evento:** \`${{ github.event_name }}\`" >> relatorio-final.md
+          echo "---" >> relatorio-final.md
+
           echo "### 👤 Informações do Aluno" >> relatorio-final.md
           echo "* **Username:** \`$STUDENT_LOGIN\`" >> relatorio-final.md
           echo "* **E-mail (No-Reply):** \`$STUDENT_EMAIL\`" >> relatorio-final.md
