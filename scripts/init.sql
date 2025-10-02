@@ -12,7 +12,6 @@ CREATE TABLE livros (
     ano_publicacao INT
 );
 
--- 1. Insere o livro "1984"
 INSERT INTO livros (titulo, autor, ano_publicacao) VALUES 
 ('1984', 'George Orwell', 1949);
 
