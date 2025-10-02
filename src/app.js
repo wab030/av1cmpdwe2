@@ -7,4 +7,5 @@ const app = express();
 
 // Para iniciar sua aplicação digite nodemon server.js
 
+console.log("hello world");
 module.exports = app;
