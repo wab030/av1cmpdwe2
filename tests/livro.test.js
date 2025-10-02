@@ -83,7 +83,7 @@ describe('Testes de Integração da Aplicação', () => {
         it('T3: Deve rejeitar o cadastro se o ANO DE PUBLICAÇÃO for futuro (Status 400)', async () => {
             const anoFuturo = new Date().getFullYear() + 1;
             const livroFuturo = { ...livroValido, ano_publicacao: anoFuturo };
-
+//
             const response = await request(app)
                 .post('/livros')
                 .send(livroFuturo);
