@@ -6,5 +6,7 @@ const app = express();
 //ATENÇÂO NÃO COLOQUE O COMANDO app.listen nesse arquivo. Ele já está no server, que é o arquivo principal da sua aplicação. 
 
 // Para iniciar sua aplicação digite nodemon server.js
-
+console.log('Teste da prova');
+console.log('Teste da prova');
+console.log('Teste da prova');
 module.exports = app;
