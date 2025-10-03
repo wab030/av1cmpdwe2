@@ -11,3 +11,4 @@ module.exports = app;
 
 console.log("testando");
 console.log("testando2");
+console.log("Testando 3");
