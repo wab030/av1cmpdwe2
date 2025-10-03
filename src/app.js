@@ -10,3 +10,4 @@ const app = express();
 module.exports = app;
 
 console.log("testando");
+console.log("testando2");
