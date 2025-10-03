@@ -8,4 +8,5 @@ const app = express();
 // Para iniciar sua aplicação digite nodemon server.js
 console.log('Teste da prova');
 console.log('Teste da prova');
+console.log('Teste da prova');
 module.exports = app;
