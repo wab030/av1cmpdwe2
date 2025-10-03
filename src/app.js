@@ -1,10 +1,13 @@
 const express = require('express');
 const app = express();
+const livroRoutes = require('./routes/livroRoutes');
+app.set('view engine', 'ejs');
+app.set('views', './views');
+app.use(express.urlencoded({ extended: true })); 
+app.use(express.json()); // Para parsear JSON
+app.use(express.static('public')); 
 
-// Aqui você deve desenvolver toda a configuração do seu app. 
-
-//ATENÇÂO NÃO COLOQUE O COMANDO app.listen nesse arquivo. Ele já está no server, que é o arquivo principal da sua aplicação. 
-
-// Para iniciar sua aplicação digite nodemon server.js
+// Rotas da Aplicação
+app.use('/', livroRoutes);
 
 module.exports = app;
