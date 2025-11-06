@@ -1,10 +1,15 @@
 const express = require('express');
+const path = require('path');
+const medicamentoRoutes = require('./routes/medicamentoRoutes');
+
 const app = express();
 
-// Aqui você deve desenvolver toda a configuração do seu app. 
+// Configurações
+app.use(express.urlencoded({ extended: true }));  // Para POST forms
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
 
-//ATENÇÂO NÃO COLOQUE O COMANDO app.listen nesse arquivo. Ele já está no server, que é o arquivo principal da sua aplicação. 
+// Rotas
+app.use(medicamentoRoutes);
 
-// Para iniciar sua aplicação digite nodemon server.js
-console.log("Teste da Prova");
 module.exports = app;
